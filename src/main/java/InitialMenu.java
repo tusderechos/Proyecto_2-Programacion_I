@@ -10,8 +10,6 @@
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import java.io.File;
@@ -19,7 +17,7 @@ import java.io.IOException;
 import javax.swing.JFrame;
 
 //Panel personalizado con imagen de fondo
-public class BackgroundPanel extends JPanel {
+class BackgroundPanel extends JPanel {
     private BufferedImage BackgroundImage;
     
     public BackgroundPanel(BufferedImage BackgroundImage) {
@@ -60,6 +58,7 @@ public class BackgroundPanel extends JPanel {
     }
 }
 
+//Menu de Inicio del juego
 public class InitialMenu extends JFrame {
     
     //Variables para tener una funcionalidad personalizada y que se mire masiso
@@ -75,7 +74,7 @@ public class InitialMenu extends JFrame {
         SetupBackgroundandStyles();
     }
     
-    private void SetupBackgroundImageandStyles() {
+    private void SetupBackgroundandStyles() {
         LoadBackgroundImage(); //Cargar imagen de fondo
         
         //Configurar ventana
@@ -85,8 +84,176 @@ public class InitialMenu extends JFrame {
         
         //Aqui solo estoy poniendo un bloque que agregue el fondo solamente si se cargo correctamente
         if (BackgroundImage != null) {
-            //SetupBackgroundImage(); //Comentado temporalmente
+            SetupBackgroundImage();
         }
+        
+        //Aqui aplico estilos a los componntes que vaya agregando en el Design
+        StyleComponents();
+    }
+    
+    //Cargar la imagen de fondo
+    private void LoadBackgroundImage() {
+        try {
+            BackgroundImage = ImageIO.read(getClass().getResourceAsStream("/images/menu_bg.PNG"));
+        
+            if (BackgroundImage != null) {
+                System.out.println("Imagen de fondo cargada exitosamente.");
+            } else {
+                //Ruta alternativa porque uno nunca sabe
+                BackgroundImage = ImageIO.read(new File("src/main/resources/images/menu_bg.PNG"));
+                if (BackgroundImage != null) {
+                    System.out.println("Imagen cargada con la ruta alternativa");
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("No se pudo cargar imagen de fondo: " + e.getMessage());
+            BackgroundImage = null;
+        }
+    }
+    
+    //Configurar imagen de fondo
+    private void SetupBackgroundImage() {
+        if (BackgroundImage != null) {
+            try {
+                //Estoy usando  LayeredPane porque este bendito fondo de menu principal no quiere cooperar y tengo sueño
+                JLabel BackgroundLabel = new JLabel() {
+                    @Override
+                    protected void paintComponent(Graphics g) {
+                        super.paintComponent(g);
+                        if (BackgroundImage != null) {
+                            Graphics2D g2d = (Graphics2D) g.create();
+                            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                            
+                            // Escalar la imagen manteniendo la proporcion
+                            int PanelWidth = getWidth();
+                            int PanelHeight = getHeight();
+                            int ImageWidth = BackgroundImage.getWidth();
+                            int ImageHeight = BackgroundImage.getHeight();
+                            
+                            double ScaleX = (double) PanelWidth / ImageWidth;
+                            double ScaleY = (double) PanelHeight / ImageHeight;
+                            double Scale = Math.max(ScaleX, ScaleY);
+                            
+                            int ScaleWidth = (int) (ImageWidth * Scale);
+                            int ScaleHeight = (int) (ImageHeight * Scale);
+                            int x = (PanelWidth - ScaleWidth) / 2;
+                            int y = (PanelHeight - ScaleHeight) / 2;
+                            
+                            g2d.drawImage(BackgroundImage, x, y, ScaleWidth, ScaleHeight, null);
+                        }
+                    }
+                };
+                
+                //Aqui configuro el panel de fondo
+                BackgroundLabel.setBounds(0, 0, getWidth(), getHeight());
+                
+                //Se hace transparente el contentPane para que se vea la imagen de fondo
+                ((JComponent) getContentPane()).setOpaque(false);
+                
+                //Y aqui ya se agreda la imagen al fondo
+                getLayeredPane().add(BackgroundLabel, JLayeredPane.DEFAULT_LAYER);
+                getLayeredPane().moveToBack(BackgroundLabel);
+                
+                //Listener para redimensionar
+                addComponentListener(new java.awt.event.ComponentAdapter() {
+                    @Override
+                    public void componentResized(java.awt.event.ComponentEvent evt) {
+                        BackgroundLabel.setBounds(0, 0, getWidth(), getHeight());
+                        BackgroundLabel.repaint();
+                    }
+                });
+                
+                System.out.println("Imagen de fondo aplicada correctamente.");
+                
+            } catch (Exception e) {
+                System.out.println("Error aplicando fondo: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    //Aplicar estilo a componentes que vaya agregando en el Design
+    private void StyleComponents() {
+        StyleComponentsRecursively(getContentPane()); //Busco los componentes por su nombre y aplico los estilos
+    }
+    
+    //Aplicar estilos recursivamente a todos los componentes
+    private void StyleComponentsRecursively(Container Container) {
+        for (Component Comp : Container.getComponents()) {
+            //Aplicar estilos segun el tipo de componente
+            if (Comp instanceof JButton) {
+                StyleButton((JButton) Comp);
+            } else if (Comp instanceof JLabel) {
+                StyleLabel((JLabel) Comp);
+            } else if (Comp instanceof Container) {
+                //Aqui continuo recursivamente con los contenedores
+                StyleComponentsRecursively((Container) Comp);
+            }
+        }
+    }
+    
+    //El estilo de los botones
+    private void StyleButton (JButton Button) {
+        Button.setFont(new Font("Arial", Font.BOLD, 16));
+        Button.setForeground(Color.white);
+        Button.setFocusPainted(false);
+        Button.setBorder(BorderFactory.createRaisedBevelBorder());
+        
+        //Colores segun el texto del boton
+        String Text = Button.getText().toUpperCase();
+        Color BackgroundColor;
+        
+        if (Text.contains("LOGIN") || Text.contains("LOG IN") || Text.contains("INICIAR SESION")) {
+            BackgroundColor = new Color(70, 130, 180, 200); //Este color es un Azul pero transparente para que se mire masiso
+        } else if (Text.contains("CREATE PLAYER") || Text.contains("CREAR JUGADOR")) {
+            BackgroundColor = new Color(34, 139, 34, 200); //Este color es un Verde pero transparente para que se mire masiso
+        } else if (Text.contains("EXIT") || Text.contains("SALIR")) {
+            BackgroundColor = new Color(178, 34, 34, 200); //Este color es un Rojo pero transparente para que se mire masiso
+        } else {
+            BackgroundColor = new Color(100, 100, 100, 200); //Aqui pongo que por defecto el color de los botones sea un Gris pero transparente
+        }
+        
+        Button.setBackground(BackgroundColor);
+        Button.setOpaque(true);
+        
+        //Efecto para que los botones floten y se mire bien otro royo que me tomo como 10 siglos hacer
+        addHoverEffect(Button, BackgroundColor);
+    }
+    
+    //Aplicar estilo a los Labels
+    private void StyleLabel(JLabel Label) {
+        String Text = Label.getText().toUpperCase();
+        
+        //Estilo para los titulos principales
+        if (Text.contains("MARVELHEROES") || Text.contains("MARVEL HEROES")) {
+            Label.setFont(new Font("Arial", Font.BOLD, 28));
+            Label.setForeground(Color.WHITE);
+            Label.setHorizontalAlignment(JLabel.CENTER);
+            
+            //Estilo para los subtitulos
+        } else if (Text.contains("STRATEGOGAME") || Text.contains("STRATEGO GAME")) { 
+            Label.setFont(new Font("Arial", Font.ITALIC, 18));
+            Label.setForeground(Color.WHITE);
+            Label.setHorizontalAlignment(JLabel.CENTER);
+            
+            //Este else es por si acaso hay otros Labels
+        } else {
+            Label.setForeground(Color.WHITE);
+        }
+    }
+    
+    //Agregar el efecto de Hover a los botones
+    private void addHoverEffect(JButton Button, Color OriginalColor) {
+        Button.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void MouseEntered(java.awt.event.MouseEvent evt) {
+                Color BrighterColor = new Color(Math.min(255, OriginalColor.getRed() + 30), Math.min(255, OriginalColor.getGreen() + 30), Math.min(255, OriginalColor.getBlue() + 30), OriginalColor.getAlpha());
+                Button.setBackground(BrighterColor);
+            }
+            
+            public void MouseExited(java.awt.event.MouseEvent evt) {
+                Button.setBackground(OriginalColor);
+            }
+        });
     }
     
     /**
@@ -152,16 +319,30 @@ public class InitialMenu extends JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    //Evento de Crear Jugador
     private void CreatePlayerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CreatePlayerButtonActionPerformed
         // TODO add your handling code here:
+        //ShowCreatePlayerDialog();
+        //COMENTADO MIENTRAS HAGO EL .JAVA DE ESTO PARA QUE NO ME DE ERRORES
     }//GEN-LAST:event_CreatePlayerButtonActionPerformed
 
+    //Evento de Iniciar Sesion
     private void LoginButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_LoginButtonActionPerformed
         // TODO add your handling code here:
+        LoginDialog LoginDialog = new LoginDialog(this);
+        String AuthenticatedUser = LoginDialog.ShowDialog();
+        
+        if (AuthenticatedUser != null) {
+            // OpenMainMenu(AuthenticatedUser); //Significa que el inicio de sesion fue exitoso
+            //COMENTADO MIENTRAS HAGO EL .JAVA DE ESTO PARA QUE NO ME DE ERRORES
+        }
     }//GEN-LAST:event_LoginButtonActionPerformed
 
+    //Evento de Salir
     private void ExitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ExitButtonActionPerformed
         // TODO add your handling code here:
+        // ExitApplication();
+        //COMENTADO MIENTRAS HAGO EL .JAVA DE ESTO PARA QUE NO ME DE ERRORES
     }//GEN-LAST:event_ExitButtonActionPerformed
 
     /**
