@@ -322,8 +322,17 @@ public class InitialMenu extends JFrame {
     //Evento de Crear Jugador
     private void CreatePlayerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CreatePlayerButtonActionPerformed
         // TODO add your handling code here:
-        //ShowCreatePlayerDialog();
-        //COMENTADO MIENTRAS HAGO EL .JAVA DE ESTO PARA QUE NO ME DE ERRORES
+        ShowCreatePlayerDialog CreatePlayerDialog = new ShowCreatePlayerDialog(this);
+        String CreatedUser = CreatePlayerDialog.ShowDialog();
+        
+        //Si la creacion del jugador fue exitosa, que se muestre una opcion para hacer un login automaticamente
+        if (CreatedUser != null) {
+            int Option = JOptionPane.showConfirmDialog(this, "Jugador '" + CreatedUser + "' creado exitosamente.\n" + "Deseas iniciar sesion automaticamente?", "Creacion exitosa", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            
+            if (Option == JOptionPane.YES_OPTION) {
+                //OpenMainMenu(CreatedUser);
+            }
+        }
     }//GEN-LAST:event_CreatePlayerButtonActionPerformed
 
     //Evento de Iniciar Sesion
