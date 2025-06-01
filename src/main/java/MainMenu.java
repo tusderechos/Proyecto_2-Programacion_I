@@ -70,6 +70,7 @@ public class MainMenu extends javax.swing.JFrame {
     private void LoadBackgroundImage() {
         try {
             BackgroundImage = ImageIO.read(getClass().getResourceAsStream("/images/menu_bg.PNG"));
+            BackgroundImage = null;
             
             if (BackgroundImage != null) {
                 System.out.println("Imagen de fondo del menu principal cargada exitosamente");
@@ -92,7 +93,7 @@ public class MainMenu extends javax.swing.JFrame {
     private void SetupBackgroundImage() {
         if (BackgroundImage != null) {
             try {
-                JLabel BackgroundLabel = new JLabel() {
+                JPanel BackgroundPanel = new JPanel() {
                     @Override
                     protected void paintComponent(Graphics g) {
                         super.paintComponent(g);
@@ -116,26 +117,33 @@ public class MainMenu extends javax.swing.JFrame {
                             int Y = (PanelHeight - ScaledHeight) / 2;
                             
                             g2d.drawImage(BackgroundImage, X, Y, ScaledWidth, ScaledHeight, null);
+                            g2d.dispose();
                         }
                     }
                 };
                 
                 //Configurar el Label del fondo
-                BackgroundLabel.setBounds(0, 0, getWidth(), getHeight());
+                BackgroundPanel.setBounds(0, 0, getWidth(), getHeight());
+                BackgroundPanel.setOpaque(false);
                 
-                //Hacer transparente el contentPane
-                ((JComponent) getContentPane()).setOpaque(false);
+                //Usando LayeredPane porque tenia el mismo problema que tenia en el menu inicial
+                getLayeredPane().add(BackgroundPanel, JLayeredPane.DEFAULT_LAYER);
                 
                 //Agregar el LayeredPane al fondo
-                getLayeredPane().add(BackgroundLabel, JLayeredPane.DEFAULT_LAYER);
-                getLayeredPane().moveToBack(BackgroundLabel);
+                getLayeredPane().setLayer(getContentPane(), JLayeredPane.PALETTE_LAYER);
+                
+                //Hacer que el ContentPane sea transparente para que se pueda ver el fondo
+                getContentPane().setBackground(new Color(0, 0, 0, 0));
+                if (getContentPane() instanceof JComponent) {
+                    ((JComponent) getContentPane()).setOpaque(false);
+                }
                 
                 //Esto es un Listener para poder dimensional
                 addComponentListener(new java.awt.event.ComponentAdapter() {
                     @Override
                     public void componentResized(java.awt.event.ComponentEvent evt) {
-                        BackgroundLabel.setBounds(0, 0, getWidth(), getHeight());
-                        BackgroundLabel.repaint();
+                        BackgroundPanel.setBounds(0, 0, getWidth(), getHeight());
+                        BackgroundPanel.repaint();
                     }
                 });
                 
@@ -183,7 +191,7 @@ public class MainMenu extends javax.swing.JFrame {
         } else if (Text.contains("UNIVERSO MARVEL") || Text.contains("MARVEL UNIVERSE")) {
             BackgroundColor = new Color(245, 124, 0); //Esto es como un Naranja/Dorado
         } else if (Text.contains("CERRAR SESION") || Text.contains("LOG OUT")) {
-            BackgroundColor = new Color(150, 150, 150); //Gris Oscuro
+            BackgroundColor = new Color(0, 0, 0); //Negro para que no se mire igual al de configuracion porque antes de tenia un gris oscuro
         } else {
             BackgroundColor = new Color(100, 100, 100); //El color por defecto sera un Gris
         }
@@ -295,33 +303,33 @@ public class MainMenu extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(LogoutButton, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
             .addGroup(layout.createSequentialGroup()
                 .addGap(17, 17, 17)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(MarvelButton)
-                    .addComponent(ProfileButton)
-                    .addComponent(ConfigButton)
-                    .addComponent(StrateGOButton))
-                .addContainerGap(175, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(LogoutButton)
-                .addGap(21, 21, 21))
+                    .addComponent(MarvelButton, javax.swing.GroupLayout.PREFERRED_SIZE, 172, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(ConfigButton, javax.swing.GroupLayout.PREFERRED_SIZE, 163, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(ProfileButton, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(StrateGOButton, javax.swing.GroupLayout.PREFERRED_SIZE, 241, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(148, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap(81, Short.MAX_VALUE)
-                .addComponent(StrateGOButton)
-                .addGap(26, 26, 26)
-                .addComponent(ConfigButton)
-                .addGap(27, 27, 27)
-                .addComponent(ProfileButton)
-                .addGap(26, 26, 26)
-                .addComponent(MarvelButton)
-                .addGap(4, 4, 4)
-                .addComponent(LogoutButton)
-                .addGap(21, 21, 21))
+                .addContainerGap(88, Short.MAX_VALUE)
+                .addComponent(StrateGOButton, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(ConfigButton, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(ProfileButton, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(MarvelButton, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(2, 2, 2)
+                .addComponent(LogoutButton, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
 
         pack();

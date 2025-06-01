@@ -72,6 +72,16 @@ public class InitialMenu extends JFrame {
     public InitialMenu() {
         initComponents();
         SetupBackgroundandStyles();
+        
+        Timer RepaintTimer = new Timer(100, e -> {
+            setVisible(false);
+            setVisible(true);
+            repaint();
+            revalidate();
+        });
+        
+        RepaintTimer.setRepeats(false);
+        RepaintTimer.start();
     }
     
     private void SetupBackgroundandStyles() {
@@ -89,13 +99,34 @@ public class InitialMenu extends JFrame {
         
         //Aqui aplico estilos a los componntes que vaya agregando en el Design
         StyleComponents();
+        
+        //Forzar un repintado porque me estaba dando un error
+        SwingUtilities.invokeLater(() -> {
+            repaint();
+            revalidate();
+            
+            //Forzar el repintando de todos los componentes
+            repaintAllComponents(getContentPane());
+        });
+    }
+    
+    /*
+        Forzar el repintado de todos los componentes
+    */
+    private void repaintAllComponents(Container Container) {
+        for (Component Comp : Container.getComponents()) {
+            Comp.repaint();
+            if (Comp instanceof Container) {
+                repaintAllComponents((Container) Comp);
+            }
+        }
     }
     
     //Cargar la imagen de fondo
     private void LoadBackgroundImage() {
         try {
             BackgroundImage = ImageIO.read(getClass().getResourceAsStream("/images/menu_bg.PNG"));
-        
+            
             if (BackgroundImage != null) {
                 System.out.println("Imagen de fondo cargada exitosamente.");
             } else {
@@ -115,8 +146,8 @@ public class InitialMenu extends JFrame {
     private void SetupBackgroundImage() {
         if (BackgroundImage != null) {
             try {
-                //Estoy usando  LayeredPane porque este bendito fondo de menu principal no quiere cooperar y tengo sueño
-                JLabel BackgroundLabel = new JLabel() {
+                //Estoy usando el JPanel para hacer un panel personalizado para el fondo porque este bendito fondo de menu principal no quiere cooperar
+                JPanel BackgroundPanel = new JPanel() {
                     @Override
                     protected void paintComponent(Graphics g) {
                         super.paintComponent(g);
@@ -124,42 +155,33 @@ public class InitialMenu extends JFrame {
                             Graphics2D g2d = (Graphics2D) g.create();
                             g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
                             
-                            // Escalar la imagen manteniendo la proporcion
-                            int PanelWidth = getWidth();
-                            int PanelHeight = getHeight();
-                            int ImageWidth = BackgroundImage.getWidth();
-                            int ImageHeight = BackgroundImage.getHeight();
-                            
-                            double ScaleX = (double) PanelWidth / ImageWidth;
-                            double ScaleY = (double) PanelHeight / ImageHeight;
-                            double Scale = Math.max(ScaleX, ScaleY);
-                            
-                            int ScaleWidth = (int) (ImageWidth * Scale);
-                            int ScaleHeight = (int) (ImageHeight * Scale);
-                            int x = (PanelWidth - ScaleWidth) / 2;
-                            int y = (PanelHeight - ScaleHeight) / 2;
-                            
-                            g2d.drawImage(BackgroundImage, x, y, ScaleWidth, ScaleHeight, null);
+                            g2d.drawImage(BackgroundImage, 0, 0, getWidth(), getHeight(), null);
+                            g2d.dispose();
                         }
                     }
                 };
                 
                 //Aqui configuro el panel de fondo
-                BackgroundLabel.setBounds(0, 0, getWidth(), getHeight());
+                BackgroundPanel.setBounds(0, 0, getWidth(), getHeight());
+                BackgroundPanel.setOpaque(false);
                 
-                //Se hace transparente el contentPane para que se vea la imagen de fondo
-                ((JComponent) getContentPane()).setOpaque(false);
+                //LayeredPane porque esta imagen de fondo funcionara porque asi lo dicta la Palabra de Dios
+                getLayeredPane().add(BackgroundPanel, JLayeredPane.DEFAULT_LAYER);
                 
-                //Y aqui ya se agreda la imagen al fondo
-                getLayeredPane().add(BackgroundLabel, JLayeredPane.DEFAULT_LAYER);
-                getLayeredPane().moveToBack(BackgroundLabel);
+                //Aqui aseguro que el ContentPane este encima
+                getLayeredPane().setLayer(getContentPane(), JLayeredPane.PALETTE_LAYER);
+                
+                //Hacer que el ContentPane sea transparente para ver el fondo
+                if (getContentPane() instanceof JComponent) {
+                    ((JComponent) getContentPane()).setOpaque(false);
+                }
                 
                 //Listener para redimensionar
                 addComponentListener(new java.awt.event.ComponentAdapter() {
                     @Override
                     public void componentResized(java.awt.event.ComponentEvent evt) {
-                        BackgroundLabel.setBounds(0, 0, getWidth(), getHeight());
-                        BackgroundLabel.repaint();
+                        BackgroundPanel.setBounds(0, 0, getWidth(), getHeight());
+                        BackgroundPanel.repaint();
                     }
                 });
                 
@@ -175,6 +197,22 @@ public class InitialMenu extends JFrame {
     //Aplicar estilo a componentes que vaya agregando en el Design
     private void StyleComponents() {
         StyleComponentsRecursively(getContentPane()); //Busco los componentes por su nombre y aplico los estilos
+        
+        //Forzar la visibilidad de los botones
+        if (LoginButton != null) {
+            LoginButton.setVisible(true);
+            LoginButton.repaint();
+        }
+        
+        if (CreatePlayerButton != null) {
+            CreatePlayerButton.setVisible(true);
+            CreatePlayerButton.repaint();
+        }
+        
+        if (ExitButton != null) {
+            ExitButton.setVisible(true);
+            ExitButton.repaint();
+        }
     }
     
     //Aplicar estilos recursivamente a todos los componentes
