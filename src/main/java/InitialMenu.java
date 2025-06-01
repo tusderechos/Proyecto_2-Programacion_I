@@ -256,6 +256,41 @@ public class InitialMenu extends JFrame {
         });
     }
     
+    /*
+        OpenMainMenu
+    */
+    private void OpenMainMenu(String Username) {
+    System.out.println("Abriendo menu principal para usuario: " + Username);
+    
+        try {
+            //Cerrar la ventana actual
+            dispose();
+
+            //Crear y mostrar el menu principal
+            MainMenu MainMenu = new MainMenu(Username);
+            MainMenu.setVisible(true);
+
+            System.out.println("Menú principal abierto exitosamente para: " + Username);
+
+        } catch (Exception e) {
+            System.out.println("Error abriendo menu principal: " + e.getMessage());
+            e.printStackTrace();
+
+            //Si hay error, mostrar mensaje y volver a abrir InitialMenu
+            JOptionPane.showMessageDialog(null, "Error abriendo el menú principal.\n" + "Detalles: " + e.getMessage() + "\n\n" + "Por favor, inténtalo nuevamente.", "Error - Menú Principal", JOptionPane.ERROR_MESSAGE);
+
+            // Reabrir InitialMenu si hay error
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    new InitialMenu().setVisible(true);
+                } catch (Exception ex) {
+                    System.out.println("Error critico reabriendo InitialMenu: " + ex.getMessage());
+                    System.exit(1);
+                }
+            });
+        }
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -322,17 +357,29 @@ public class InitialMenu extends JFrame {
     //Evento de Crear Jugador
     private void CreatePlayerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CreatePlayerButtonActionPerformed
         // TODO add your handling code here:
-        ShowCreatePlayerDialog CreatePlayerDialog = new ShowCreatePlayerDialog(this);
-        String CreatedUser = CreatePlayerDialog.ShowDialog();
-        
-        //Si la creacion del jugador fue exitosa, que se muestre una opcion para hacer un login automaticamente
-        if (CreatedUser != null) {
-            int Option = JOptionPane.showConfirmDialog(this, "Jugador '" + CreatedUser + "' creado exitosamente.\n" + "Deseas iniciar sesion automaticamente?", "Creacion exitosa", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-            
+        ShowCreatePlayerDialog createDialog = new ShowCreatePlayerDialog(this);
+        String NewUsername = createDialog.ShowDialog();
+
+        //Si la creacion fue exitosa, mostrar opcion para hacer un login automatico
+        if (NewUsername != null) {
+            System.out.println("Jugador creado exitosamente: " + NewUsername);
+
+            int Option = JOptionPane.showConfirmDialog(this, "Jugador '" + NewUsername + "' creado exitosamente!\n\n" + "Deseas iniciar sesion automaticamente con tu nueva cuenta?", "Jugador Creado - Login Automatico", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+
             if (Option == JOptionPane.YES_OPTION) {
-                //OpenMainMenu(CreatedUser);
+                System.out.println("Iniciando sesion automatica para: " + NewUsername);
+
+                //Mostrar mensaje de transicion
+                JOptionPane.showMessageDialog(this, "¡Bienvenido " + NewUsername + "!\n" + "Accediendo al menú principal...", "Sesión Iniciada", JOptionPane.INFORMATION_MESSAGE);
+
+                //Abrir el menu principal directamente
+                OpenMainMenu(NewUsername);
+            } else {
+                System.out.println("Usuario eligió no hacer login automático");
             }
-        }
+        } else {
+            System.out.println("Creación de jugador cancelada");
+        }        
     }//GEN-LAST:event_CreatePlayerButtonActionPerformed
 
     //Evento de Iniciar Sesion
@@ -342,9 +389,16 @@ public class InitialMenu extends JFrame {
         String AuthenticatedUser = LoginDialog.ShowDialog();
         
         if (AuthenticatedUser != null) {
-            // OpenMainMenu(AuthenticatedUser); //Significa que el inicio de sesion fue exitoso
-            //COMENTADO MIENTRAS HAGO EL .JAVA DE ESTO PARA QUE NO ME DE ERRORES
-        }
+            System.out.println("Login exitoso para usuario: " + AuthenticatedUser);
+            
+            //Mostrar mensaje de exito
+            JOptionPane.showMessageDialog(this, "Bienvenido " + AuthenticatedUser + "!\n" + "Accediendo al menu principal...", "Login exitoso", JOptionPane.INFORMATION_MESSAGE);
+            
+            //Abrir el menu principal
+            OpenMainMenu(AuthenticatedUser);
+        } else {
+            System.out.println("Login cancelado por el usuario");
+        }        
     }//GEN-LAST:event_LoginButtonActionPerformed
 
     //Evento de Salir
