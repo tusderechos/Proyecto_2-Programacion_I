@@ -442,8 +442,13 @@ public class InitialMenu extends JFrame {
     //Evento de Salir
     private void ExitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ExitButtonActionPerformed
         // TODO add your handling code here:
-        // ExitApplication();
-        //COMENTADO MIENTRAS HAGO EL .JAVA DE ESTO PARA QUE NO ME DE ERRORES
+        ExitButton.addActionListener(e -> {
+            int Respuesta = JOptionPane.showConfirmDialog(this, "Estas seguro de que quieres salir del juego?", "Confirmar salida", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            
+            if (Respuesta == JOptionPane.YES_OPTION) {
+                System.exit(0);
+            }
+        });
     }//GEN-LAST:event_ExitButtonActionPerformed
 
     /**
