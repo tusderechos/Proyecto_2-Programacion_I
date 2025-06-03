@@ -346,6 +346,16 @@ public class MainMenu extends javax.swing.JFrame {
     private void StrateGOButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_StrateGOButtonActionPerformed
         // TODO add your handling code here:
         ShowStrategoSubmenu();
+        StrateGOButton.addActionListener(e -> {
+            
+            try {
+                //GameBoard GameBoard = new GameBoard();
+                //GameBoard.setVisible(true);
+                //this.dispose();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "El tablero de juego aun no esta implementado.\nProximamente.", "Funcion en desarrollo", JOptionPane.INFORMATION_MESSAGE);
+            }
+        });
     }//GEN-LAST:event_StrateGOButtonActionPerformed
 
     /*
@@ -354,6 +364,21 @@ public class MainMenu extends javax.swing.JFrame {
     private void ConfigButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ConfigButtonActionPerformed
         // TODO add your handling code here:
         ShowConfiguration();
+        ConfigButton.addActionListener(e -> {
+            //Opcion A - cuando tenga ConfigDialog
+            try {
+            //ConfigDialog ConfigDialog = new ConfigDialog(this);
+            //ConfigDialog.setVisible(true);
+            } catch (Exception ex) {
+                //Opcion B - Configuraciones basicas temporales
+                String[] Opciones = {"Sonido: ON", "Musica: ON", "Dificultad: Normal"};
+                String Seleccion = (String) JOptionPane.showInputDialog(this, "Configuraciones del juego:", "Configuracion", JOptionPane.PLAIN_MESSAGE, null, Opciones, Opciones[0]);
+
+                if (Seleccion != null) {
+                    JOptionPane.showMessageDialog(this, "Configuracion aplicada:" + Seleccion, "Configuracion", JOptionPane.INFORMATION_MESSAGE);
+                }
+            }
+        });
     }//GEN-LAST:event_ConfigButtonActionPerformed
 
     /*
@@ -378,6 +403,19 @@ public class MainMenu extends javax.swing.JFrame {
     private void LogoutButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_LogoutButtonActionPerformed
         // TODO add your handling code here:
         ExitToMainMenu();
+        int Respuesta = JOptionPane.showConfirmDialog(this, "Estas seguro de que quieres cerrar sesion?", "Cerrar sesion", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        
+        if (Respuesta == JOptionPane.YES_OPTION) {
+            //Limpiar datos del jugador actual
+            CurrentUser = null;
+            
+            //Volver al menu principal
+            InitialMenu InitialMenu = new InitialMenu();
+            InitialMenu.setVisible(true);
+            this.dispose();
+            
+            System.out.println("Sesion cerrada exitosamente");
+        }
     }//GEN-LAST:event_LogoutButtonActionPerformed
 
     

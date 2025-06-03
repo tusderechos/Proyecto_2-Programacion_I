@@ -265,7 +265,7 @@ public class LoginDialog extends javax.swing.JDialog {
         }
         
         if (Password.isEmpty()) {
-            showError("Por favor ingrese su nombre de usuario");
+            showError("Por favor ingrese su contraseña");
             PasswordField.requestFocus();
             return;
         }

@@ -113,7 +113,7 @@ public class ShowCreatePlayerDialog extends javax.swing.JDialog {
     private void StyleLabel(JLabel Label) {
         String Text = Label.getText().toUpperCase();
         
-        if (Text.contains("CREAR NUEVO JUGADOR") || Text.contains("CREATE NEW PLAYER")) {
+        if (Text.contains("CREAR JUGADOR") || Text.contains("CREATE PLAYER")) {
             Label.setFont(new Font("Arial", Font.BOLD, 18));
             Label.setForeground(new Color(50, 50, 50));
         } else {
@@ -215,15 +215,17 @@ public class ShowCreatePlayerDialog extends javax.swing.JDialog {
                     .addComponent(jLabel3)
                     .addComponent(jLabel2)
                     .addComponent(jLabel1)
-                    .addComponent(Titulo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(UsernameField)
+                    .addComponent(UsernameField, javax.swing.GroupLayout.DEFAULT_SIZE, 251, Short.MAX_VALUE)
                     .addComponent(PasswordField)
-                    .addComponent(ConfirmPasswordField))
+                    .addComponent(ConfirmPasswordField)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(Titulo)
+                        .addGap(10, 10, 10)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addGap(35, 35, 35)
                 .addComponent(CreateButton)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 68, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 77, Short.MAX_VALUE)
                 .addComponent(CancelButton, javax.swing.GroupLayout.PREFERRED_SIZE, 129, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(35, 35, 35))
         );
