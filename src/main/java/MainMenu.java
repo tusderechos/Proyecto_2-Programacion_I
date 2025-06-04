@@ -213,11 +213,11 @@ public class MainMenu extends javax.swing.JFrame {
     */
     private void addHoverEffect(JButton Button, Color OriginalColor) {
         Button.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void MouseEntered(java.awt.event.MouseEvent evt) {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
                 Button.setBackground(OriginalColor.brighter());
             }
             
-            public void MouseExited(java.awt.event.MouseEvent evt) {
+            public void mouseExited(java.awt.event.MouseEvent evt) {
                 Button.setBackground(OriginalColor);
             }
         });
@@ -228,7 +228,7 @@ public class MainMenu extends javax.swing.JFrame {
     */
     private void SetupWindowClosing() {
         addWindowListener(new java.awt.event.WindowAdapter() {
-            public void WindClosing(java.awt.event.WindowEvent WindowEvent) {
+            public void WindowClosing(java.awt.event.WindowEvent WindowEvent) {
                 ExitToMainMenu();
             }
         });

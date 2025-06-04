@@ -12,8 +12,8 @@ import javax.swing.JOptionPane;
  */
 
 import javax.swing.*;
-
-public class Configuration extends javax.swing.JFrame {
+                                                                                                                         
+public class Configuration extends javax.swing.JFrame {                                                                                                                 
 
     public static boolean TutorialMode = true; //Para indicar si el modo de tutorial esta activado
     
