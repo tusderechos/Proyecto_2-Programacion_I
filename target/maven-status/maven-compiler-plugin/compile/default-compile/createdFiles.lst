@@ -1,3 +1,4 @@
+Configuration.class
 ShowCreatePlayerDialog$1.class
 LoginDialog$3.class
 MainMenu$3.class
@@ -23,8 +24,11 @@ LoginDialog$2.class
 MainMenu$4.class
 LoginDialog$7.class
 ShowCreatePlayerDialog$5.class
+Configuration$1.class
 InitialMenu$5.class
+GameManager.class
 MainMenu$9.class
+GameManager$1.class
 LoginDialog$6.class
 LoginDialog$1.class
 InitialMenu.class
