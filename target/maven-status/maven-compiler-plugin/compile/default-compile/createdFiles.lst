@@ -17,6 +17,7 @@ InitialMenu$7.class
 LoginDialog$4.class
 ShowCreatePlayerDialog$2.class
 InitialMenu$2.class
+Player.class
 LoginDialog.class
 LoginDialog$2.class
 MainMenu$4.class
