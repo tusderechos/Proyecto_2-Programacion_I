@@ -14,12 +14,14 @@ import java.awt.event.ComponentEvent;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import java.io.File;
+import java.util.ArrayList;
 
 public class MainMenu extends javax.swing.JFrame {
 
     private String CurrentUser;
     private BufferedImage BackgroundImage;
     private boolean IsGameInProgress;
+    private GameManager GameManager;
     
     /**
      * Creates new form MainMenu
@@ -27,9 +29,9 @@ public class MainMenu extends javax.swing.JFrame {
     public MainMenu(String Username) {
         this.CurrentUser = Username;
         this.IsGameInProgress = false;
+        this.GameManager = new GameManager();
         
         LoadBackgroundImage(); //Cargar imagen de fondo antes de inicializar componentes
-        
         initComponents();
         SetupCustomization();
     }
@@ -364,21 +366,7 @@ public class MainMenu extends javax.swing.JFrame {
     private void ConfigButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ConfigButtonActionPerformed
         // TODO add your handling code here:
         ShowConfiguration();
-        ConfigButton.addActionListener(e -> {
-            //Opcion A - cuando tenga ConfigDialog
-            try {
-            //ConfigDialog ConfigDialog = new ConfigDialog(this);
-            //ConfigDialog.setVisible(true);
-            } catch (Exception ex) {
-                //Opcion B - Configuraciones basicas temporales
-                String[] Opciones = {"Sonido: ON", "Musica: ON", "Dificultad: Normal"};
-                String Seleccion = (String) JOptionPane.showInputDialog(this, "Configuraciones del juego:", "Configuracion", JOptionPane.PLAIN_MESSAGE, null, Opciones, Opciones[0]);
-
-                if (Seleccion != null) {
-                    JOptionPane.showMessageDialog(this, "Configuracion aplicada:" + Seleccion, "Configuracion", JOptionPane.INFORMATION_MESSAGE);
-                }
-            }
-        });
+        
     }//GEN-LAST:event_ConfigButtonActionPerformed
 
     /*
@@ -402,7 +390,6 @@ public class MainMenu extends javax.swing.JFrame {
     */
     private void LogoutButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_LogoutButtonActionPerformed
         // TODO add your handling code here:
-        ExitToMainMenu();
         int Respuesta = JOptionPane.showConfirmDialog(this, "Estas seguro de que quieres cerrar sesion?", "Cerrar sesion", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
         
         if (Respuesta == JOptionPane.YES_OPTION) {
