@@ -26,7 +26,7 @@ public class Configuration extends javax.swing.JFrame {
         if (TutorialMode) {
             BtnTutorial.setSelected(true);
         } else {
-            BtnTutorial.setSelected(true);
+            BtnClasico.setSelected(true);
         }
         
         setLocationRelativeTo(null);

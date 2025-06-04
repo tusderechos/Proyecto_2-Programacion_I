@@ -25,7 +25,8 @@ class BackgroundPanel extends JPanel {
         setOpaque(true);
     }
     
-    protected void PaintComponent(Graphics g) {
+    @Override
+    protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         
         if (BackgroundImage != null) {
@@ -283,12 +284,14 @@ public class InitialMenu extends JFrame {
     //Agregar el efecto de Hover a los botones
     private void addHoverEffect(JButton Button, Color OriginalColor) {
         Button.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void MouseEntered(java.awt.event.MouseEvent evt) {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
                 Color BrighterColor = new Color(Math.min(255, OriginalColor.getRed() + 30), Math.min(255, OriginalColor.getGreen() + 30), Math.min(255, OriginalColor.getBlue() + 30), OriginalColor.getAlpha());
                 Button.setBackground(BrighterColor);
             }
             
-            public void MouseExited(java.awt.event.MouseEvent evt) {
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent evt) {
                 Button.setBackground(OriginalColor);
             }
         });

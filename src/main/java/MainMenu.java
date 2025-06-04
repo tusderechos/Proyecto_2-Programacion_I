@@ -72,7 +72,6 @@ public class MainMenu extends javax.swing.JFrame {
     private void LoadBackgroundImage() {
         try {
             BackgroundImage = ImageIO.read(getClass().getResourceAsStream("/images/menu_bg.PNG"));
-            BackgroundImage = null;
             
             if (BackgroundImage != null) {
                 System.out.println("Imagen de fondo del menu principal cargada exitosamente");

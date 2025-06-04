@@ -111,10 +111,12 @@ public class LoginDialog extends javax.swing.JDialog {
     //Agregar el efecto Hover a los botones
     private void addHoverEffect(JButton Button, Color OriginalColor) {
         Button.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 Button.setBackground(OriginalColor.brighter());
             }
             
+            @Override
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 Button.setBackground(OriginalColor);
             }

@@ -176,7 +176,8 @@ public class Player {
     /*
         Convertir a String para mostrar
     */
-    public String ToString() {
+    @Override
+    public String toString() {
         return Username + " (pts: " + Points + ")";
     }
 }   
