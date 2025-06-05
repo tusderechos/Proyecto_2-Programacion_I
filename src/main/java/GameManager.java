@@ -24,8 +24,6 @@ public class GameManager {
     private int HeroesWins; //Contador de todas las victorias con el equipo de Heroes
     private int VillainWins; //Contador de todas las victorias con el equipo de Villanos
     private Player CurrentPlayer; //Para saber cual es el jugador actualmente jugando
-
-    private static final String DATA_FILE = "game_data.dat"; //Nombre del archivo en donde se van a guardar los datos
     
     public GameManager() {
         //Inicializar todas las listas vacias
@@ -35,6 +33,11 @@ public class GameManager {
         HeroesWins = 0;
         VillainWins = 0;
         CurrentPlayer = null;
+        
+        //Creacion de usuarios de prueba solamente para el desarrollo
+        CreatePlayer("Admin", "12345");
+        CreatePlayer("Jugador1", "Pass1");
+        CreatePlayer("Test", "Test1");
     }
     
     /*
@@ -279,7 +282,7 @@ public class GameManager {
     /*
         Buscar un jugador por su nombre de usuario
     */
-    private Player FindPlayerByUsername(String Username) {
+    public Player FindPlayerByUsername(String Username) {
         for (Player p : Players) {
             if (p.GetUsername().equalsIgnoreCase(Username)) {
                 return p;

@@ -14,6 +14,7 @@ import java.awt.event.ComponentEvent;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import java.io.File;
+import java.util.List;
 import java.util.ArrayList;
 
 public class MainMenu extends javax.swing.JFrame {
@@ -21,15 +22,16 @@ public class MainMenu extends javax.swing.JFrame {
     private String CurrentUser;
     private BufferedImage BackgroundImage;
     private boolean IsGameInProgress;
-    private GameManager GameManager;
+    private final GameManager gameManager;
     
     /**
      * Creates new form MainMenu
+     * @param Username
      */
     public MainMenu(String Username) {
         this.CurrentUser = Username;
         this.IsGameInProgress = false;
-        this.GameManager = new GameManager();
+        this.gameManager = GameManager.GetInstance();
         
         LoadBackgroundImage(); //Cargar imagen de fondo antes de inicializar componentes
         initComponents();
@@ -41,7 +43,14 @@ public class MainMenu extends javax.swing.JFrame {
     */
     
     private void SetupCustomization() {
-        setTitle("MARVEL HEROES - STRATEGO | JUGADOR: " + CurrentUser);
+        //Obetener datos del jugador actual
+        Player CurrentPlayer = gameManager.FindPlayerByUsername(CurrentUser);
+        String Title = ("MARVEL HEROES - STRATEGO | JUGADOR: " + CurrentUser);
+        if (CurrentPlayer != null) {
+            Title += " | PUNTOS: " + CurrentPlayer.GetPoints();
+        }
+        
+        setTitle(Title);
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         setLocationRelativeTo(null);
         setResizable(false);
@@ -213,10 +222,12 @@ public class MainMenu extends javax.swing.JFrame {
     */
     private void addHoverEffect(JButton Button, Color OriginalColor) {
         Button.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 Button.setBackground(OriginalColor.brighter());
             }
             
+            @Override
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 Button.setBackground(OriginalColor);
             }
@@ -240,7 +251,13 @@ public class MainMenu extends javax.swing.JFrame {
     private void ShowWelcomeMessage() {
         //Un bloque de pura magia oscura magicamente magica
         Timer Timer = new Timer(1000, e -> {
-           JOptionPane.showMessageDialog(this, "Bienvenido " + CurrentUser + "!\n" + "Selecciona una opcion del menu.", "Bienvenido a Marvel Heroes - Stratego", JOptionPane.INFORMATION_MESSAGE);
+           Player CurrentPlayer = gameManager.FindPlayerByUsername(CurrentUser);
+           String Message = "Bienvenido " + CurrentUser + "!\n";
+           
+            if (CurrentPlayer != null) {
+                Message += "Puntos: " + CurrentPlayer.GetPoints() + "\n";
+            }
+            Message += "Selecciona una opcion del menu.";
         });
         
         Timer.setRepeats(false);
@@ -263,7 +280,7 @@ public class MainMenu extends javax.swing.JFrame {
         MarvelButton = new javax.swing.JButton();
         LogoutButton = new javax.swing.JButton();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         StrateGOButton.setText("STRATEGO - MARVEL HEROES!");
         StrateGOButton.addActionListener(new java.awt.event.ActionListener() {
@@ -360,7 +377,6 @@ public class MainMenu extends javax.swing.JFrame {
     private void ConfigButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ConfigButtonActionPerformed
         // TODO add your handling code here:
         ShowConfiguration();
-        
     }//GEN-LAST:event_ConfigButtonActionPerformed
 
     /*
@@ -452,22 +468,60 @@ public class MainMenu extends javax.swing.JFrame {
         if (Opcion == JOptionPane.YES_OPTION) {
             //Tengo que abrir la ventana de juego
             
-            JOptionPane.showMessageDialog(this, "Proximamente: Configuracion de partida nueva\n" + "Aqui podras elegir:\n" + "- Tipo de oponente(IA, Jugador)\n" + "- Dificultad de la IA\n" + "- Configuraciones especiales\n" + "- Seleccion de heroes marvel", "En desarrollo", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, """
+                                                Proximamente: Configuracion de partida nueva
+                                                Aqui podras elegir:
+                                                - Tipo de oponente(IA, Jugador)
+                                                - Dificultad de la IA
+                                                - Configuraciones especiales
+                                                - Seleccion de heroes marvel""", "En desarrollo", JOptionPane.INFORMATION_MESSAGE);
         }
     }
     
     /*
-        Mostrar el log de juegos
+        Mostrar el log de juegos usando el GameManager
     */
     private void ShowGameLog() {
-        //Tengo que implementar el historial de partidas
-        JOptionPane.showMessageDialog(this, "LOG DE MIS ULTIMOS PARTIDOS\n\n" + "Proximamente veras aqui:\n" + "- Historial de tus ultimas 20 partidas\n" + "- Resultado (Victoria/Derrota)\n" + "- Fecha y duracion\n" + "- Oponente enfrentado\n" + "- Heroes utilizados\n", "Historial de Partidas", JOptionPane.INFORMATION_MESSAGE);
+        Player CurrentPlayer = gameManager.FindPlayerByUsername(CurrentUser);
+        
+        if (CurrentPlayer == null) {
+            JOptionPane.showMessageDialog(this, "Error: No se pudo obtener la informacion del jugador.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        List<String> GameHistory = CurrentPlayer.GetGameLogs();
+        
+        if (GameHistory.isEmpty()) {
+            JOptionPane.showMessageDialog(this, """
+                                                LOG DE MIS ULTIMOS JUEGOS
+                                                
+                                                No tienes partidas registradas aun.
+                                                Juega tu primera partida para comenzar tu historial!""", "Historial de Partidas", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            StringBuilder HistoryText = new StringBuilder();
+            HistoryText.append("LOG DE MIS ULTIMOS JUEGOS\n");
+            HistoryText.append("Usuario: ").append(CurrentUser).append("\n");
+            HistoryText.append("Puntos totales: ").append(CurrentPlayer.GetPoints()).append("\n\n");
+            HistoryText.append("Ultimas partidas:\n");
+            
+            for (int i = 0; i < GameHistory.size(); i++) {
+                HistoryText.append((i + 1)).append(". ").append(GameHistory.get(i)).append("\n");
+            }
+            
+            JOptionPane.showMessageDialog(this, HistoryText.toString(), "Historial de Partidas", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
     
     /*
-        Cambiar contraseña
+        Cambiar contraseña usando el GameManager
     */
     private void ChangePassword() {
+        Player CurrentPlayer = gameManager.FindPlayerByUsername(CurrentUser);
+        if (CurrentPlayer == null) {
+            JOptionPane.showMessageDialog(this, "Error: no se pudo obtener la informacion del jugador", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
         JPanel Panel = new JPanel(new java.awt.GridLayout(3, 2, 10, 10)); //3 filas, 2 columnas, 10 pixeles de espacio vertical y 10 pixeles de espacio horizontal
         JPasswordField CurrentPassword = new JPasswordField(15);
         JPasswordField NewPassword = new JPasswordField(15);
@@ -487,42 +541,75 @@ public class MainMenu extends javax.swing.JFrame {
             String NewPass = new String(NewPassword.getPassword());
             String Confirm = new String(ConfirmPassword.getPassword());
             
+            //Para confirmar que el usuario llene todos los campos para cambiar su contraseña
             if (Current.isEmpty() || NewPass.isEmpty() || Confirm.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Complete todos los campos", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             
+            //Para verificar que la contraseña actual que ponga el usuario sea la correcta
+            if (!Current.equals(CurrentPlayer.GetPassword())) {
+                JOptionPane.showMessageDialog(this, "La contraseña actual es la incorrecta", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            //Para verificar que las contraseñas nuevas sean la misma
             if (!NewPass.equals(Confirm)) {
                 JOptionPane.showMessageDialog(this, "Las contraseñas nuevas no coinciden", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             
+            //Verificacion de que la contraseña sea exactamente de 5 caracteres
             if (NewPass.length() < 5) {
                 JOptionPane.showMessageDialog(this, "La nueva contraseña debe tener al menos 5 caracteres", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             
-            //Me falta validar la contraseña actual y cambiarla
+            //Cambiar la contraseña usando el GameManager
+            CurrentPlayer.SetPassword(NewPass);
             JOptionPane.showMessageDialog(this, "Contraseña cambiada exitosamente", "Exito", JOptionPane.INFORMATION_MESSAGE);
         }
     }
     
     /*
-        Eliminar cuenta
+        Eliminar cuenta usando el GameManager
     */
     private void DeleteAccount() {
-        int Option = JOptionPane.showConfirmDialog(this, "⚠️ ADVERTENCIA ⚠️\n\n" + "Estas seguro que deseas eliminar tu cuenta?\n" + "Esta accion no se puede deshacer.\n\n" + "Se perderan:\n" + "- Todos tus datos de partidas\n" + "- Tu ranking y estadisticas\n" + "- Tu progreso en el juego\n\n" + "Continuar con la eliminacion?", "Eliminar Cuenta - CONFIRMACION", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        Player CurrentPlayer = gameManager.FindPlayerByUsername(CurrentUser);
+        if (CurrentPlayer == null) {
+            JOptionPane.showMessageDialog(this, "Error: No se pudo obtener la informacion del jugador", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        int Option = JOptionPane.showConfirmDialog(this, """
+                                                         ⚠️ ADVERTENCIA ⚠️
+                                                         
+                                                         Estas seguro que deseas eliminar tu cuenta?
+                                                         Esta accion no se puede deshacer.
+                                                         
+                                                         Se perderan:
+                                                         - Todos tus datos de partidas
+                                                         - Tu ranking y estadisticas
+                                                         - Tu progreso en el juego
+                                                         
+                                                         Continuar con la eliminacion?""", "Eliminar Cuenta - CONFIRMACION", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
         
         if (Option == JOptionPane.YES_OPTION) {
             //Doble confirmacion porque uno nunca sabe
             String Confirmacion = JOptionPane.showInputDialog(this, "Para confirmar la elimination, escribe tu nombre de usuario:\n" + "Usuario actual: " + CurrentUser, "Confirmacion final", JOptionPane.WARNING_MESSAGE);
             
             if (Confirmacion != null && Confirmacion.equals(CurrentUser)) {
-                //Tengo que hacer que literalmente se elimite la cuenta del sistema
-                JOptionPane.showMessageDialog(this, "Cuenta eliminada exitosamente.\n" + "Lamentamos verte partir.", "Cuenta Eliminada", JOptionPane.INFORMATION_MESSAGE);
+                //Marcar la cuenta como inactiva (elimina en este caso) siempre usando el GameManager
+                boolean Success = gameManager.DeleteAccount(CurrentUser);
                 
-                //Volver al menu inicial
-                ExitToMainMenu();
+                if (Success) {
+                    JOptionPane.showMessageDialog(this, "Cuenta eliminada exitosamente.\n" + "Lamentamos verte partir.", "Cuenta Eliminada", JOptionPane.INFORMATION_MESSAGE);
+                    
+                    //Volver al menu inicial
+                    ExitToMainMenu();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Error al eliminar la cuenta\n" + "Intentalo de nuevo mas tarde.", "Error", JOptionPane.ERROR_MESSAGE);
+                } 
             }else if (Confirmacion != null) {
                 JOptionPane.showMessageDialog(this, "El nombre de usuario no coincide.\n" + "Eliminacion cancelada.", "Error de Confirmacicn", JOptionPane.ERROR_MESSAGE);
             }
@@ -533,28 +620,112 @@ public class MainMenu extends javax.swing.JFrame {
         Mostrar el ranking de los jugadores
     */
     private void ShowRanking() {
-        //Tengo que implementar el sistema de ranking
-        JOptionPane.showMessageDialog(this,
-            "RANKING DE JUGADORES\n\n" +
-            "Proximamente veras aqui:\n" + "- Top 10 mejores jugadores\n" + "- Puntuacion y nivel\n" + "- Partidas ganadas/perdidas\n" + "- Tu posicion actual\n" + "- Estadisticas detalladas", "Ranking Marvel Heroes", JOptionPane.INFORMATION_MESSAGE);
+        List<Player> AllPlayers = gameManager.GetRanking();
+        List<Player> ActivePlayers = new ArrayList<>();
+        
+        //Filtrar solamente a los jugadores activos
+        for (Player Player : AllPlayers) {
+            if (Player.IsActive()) {
+                ActivePlayers.add(Player);
+            }
+        }
+        
+        if (ActivePlayers.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "RANKING DE JUGADORES\n\n" + "No hay jugadores registrados en el sistema", "Ranking Marvel Heroes", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        
+        //Ordenar por puntos (de mayor a menor)
+        ActivePlayers.sort((p1, p2) -> Integer.compare(p2.GetPoints(), p1.GetPoints()));
+        
+        StringBuilder RankingText = new StringBuilder(); //Un StringBuilder que me va a servir para darle correctamente el puesto en el ranking al usuario
+        RankingText.append("🏆 RANKING DE JUGADORES 🏆\n\n" );
+        
+        int CurrentUserPosition = 0; //Para poder saber despues la posicion del jugador
+        
+        //for que va a estar contando desde 0 hasta el tamaño de ActivePlayers, osea que va a parar hasta que llegue al conteo de los jugadores activos, y que tambien sea menor a 10
+        for (int i = 0; i < ActivePlayers.size() && i < 10 ; i++) {
+            Player Player = ActivePlayers.get(i);
+            String Position = (i + 1) + ".";
+            String Medal = "";
+            
+            //Para darle un agregado a el top 3, con su propia medalla para quien quiera
+            if (i == 0) Medal = "🥇";
+            else if (i == 1) Medal = "🥈";
+            else if (i == 2) Medal = "🥉";
+            
+            RankingText.append(String.format("%-3s %s %-15s - %d Puntos\n", Position, Medal, Player.GetUsername(), Player.GetPoints()));
+            
+            if (Player.GetUsername().equals(CurrentUser)) {
+                CurrentUserPosition = i + 1;
+            }
+        }
+        
+        if (CurrentUserPosition > 0) {
+            RankingText.append("\n🎯 Tu posición: #").append(CurrentUserPosition);
+        }
+        
+        RankingText.append("\n\nTotal de jugadores activos: " ).append(ActivePlayers.size());
+        
+        JOptionPane.showMessageDialog(this, RankingText.toString(), "Ranking Marvel Heroes", JOptionPane.INFORMATION_MESSAGE);
     }
     
     /*
         Mostrar las epicas batallas de rap del frikismo
     */
     private void ShowBattles() {
-        JOptionPane.showMessageDialog(this,
-            "BATALLAS ÉPICAS\n\n" +
-            "Proximamente encontraras:\n" + "- Batallas historicas de Marvel\n" + "- Recreacion de combates famosos\n" + "- Desafios especiales\n" + "- Eventos limitados\n" + "- Recompensas exclusivas", "Batallas Marvel", JOptionPane.INFORMATION_MESSAGE);
+        //Mostrar las estadisticas del jugador actual
+        Player CurrentPlayer = gameManager.FindPlayerByUsername(CurrentUser);
+        if (CurrentPlayer == null) {
+            JOptionPane.showMessageDialog(this, "Error: No se pudo obtener la informacion del jugador", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        List<String> GameHistory = CurrentPlayer.GetGameLogs();
+        int TotalGames = GameHistory.size();
+        int Victories = 0;
+        
+        //Cantar vistorias
+        for (String Game : GameHistory) {
+            if (Game.toLowerCase().contains("victoria") || Game.toLowerCase().contains("gano")) {
+                Victories++;
+            }
+        }
+        
+        int Defeats = TotalGames - Victories;
+        double WinRate = TotalGames > 0 ? (Victories * 100.0 / TotalGames) : 0;
+        
+        StringBuilder BattleText = new StringBuilder();
+        BattleText.append("⚔️ BATALLAS EPICAS ⚔️\n\n");
+        BattleText.append("Estadisticas de ").append(CurrentUser).append(":\n");
+        BattleText.append("• Batallas Totales: ").append(TotalGames).append(":\n");
+        BattleText.append("• Victorias: ").append(Victories).append("\n");
+        BattleText.append("• Derrotas: ").append(Defeats).append("\n");
+        BattleText.append("• Porcentaje de vistoria: ").append(String.format("%.1f", WinRate)).append("\n");
+        BattleText.append("• Puntos Totales: ").append(CurrentPlayer.GetPoints()).append("\n\n");
+        
+        if (TotalGames == 0) {
+            BattleText.append("Aun no has hecho ninguna batalla!\n");
+            BattleText.append("Juega tu primera partida para comenzar tu leyenda.");
+        } else {
+            BattleText.append("Proximamente encontraras:\n");
+            BattleText.append("• Batallas historicas de Marvel\n");
+            BattleText.append("• Recreacion de combates famosos\n");
+            BattleText.append("• Desafios especiales\n");
+            BattleText.append("• Eventos limitados\n");
+            BattleText.append("• Recomensas exclusivas");
+        }
+        
+        JOptionPane.showMessageDialog(this, BattleText.toString(), "Batallas Marvel", JOptionPane.INFORMATION_MESSAGE);
     }
     
     /*
         Mostrar configuracion
     */
     private void ShowConfiguration() {
-        //Tengo que implementar el panel de configuracion
-        JOptionPane.showMessageDialog(this,
-            "Proximamente: Panel de Configuracion\n" + "Aqui podras configurar:\n" + "- Volumen de sonidos\n" + "- Resolucion de pantalla\n" + "- Efectos visuales\n" + "- Controles de teclado", "En Desarrollo", JOptionPane.INFORMATION_MESSAGE);
+        SwingUtilities.invokeLater(() -> {
+            new Configuration().setVisible(true);
+        });
     }
     
     /*

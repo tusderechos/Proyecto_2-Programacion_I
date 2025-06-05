@@ -73,9 +73,9 @@ public class LoginDialog extends javax.swing.JDialog {
         String Text = Button.getText().toUpperCase();
         Color BackgroundColor;
         
-        if (Text.contains("LOGIN") || Text.contains("LOG IN") || Text.contains("INICIAR SESION")) {
+        if (Text.contains("INICIAR SESION") || Text.contains("LOG IN") || Text.contains("LOGIN")) {
             BackgroundColor = new Color(70, 130, 180);
-        } else if (Text.contains("CANCEL") || Text.contains("CANCELAR")) {
+        } else if (Text.contains("CANCELAR") || Text.contains("CANCEL")) {
             BackgroundColor = new Color(150, 150, 150);
         } else {
             BackgroundColor = new Color(100, 100, 100);
@@ -142,14 +142,13 @@ public class LoginDialog extends javax.swing.JDialog {
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setAlwaysOnTop(true);
 
-        LoginButton.setText("Iniciar Sesion");
+        LoginButton.setText("INICIAR SESION");
         LoginButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 LoginButtonActionPerformed(evt);
             }
         });
 
-        UsernameField.setText("Ingrese su Usuario");
         UsernameField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 UsernameFieldActionPerformed(evt);
@@ -172,7 +171,7 @@ public class LoginDialog extends javax.swing.JDialog {
             }
         });
 
-        CancelButton.setText("Cancelar");
+        CancelButton.setText("CANCELAR");
         CancelButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 CancelButtonActionPerformed(evt);
@@ -186,17 +185,14 @@ public class LoginDialog extends javax.swing.JDialog {
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
+                        .addGap(128, 128, 128)
+                        .addComponent(CancelButton, javax.swing.GroupLayout.PREFERRED_SIZE, 129, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
                         .addGap(112, 112, 112)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(UsernameField, javax.swing.GroupLayout.DEFAULT_SIZE, 167, Short.MAX_VALUE)
-                            .addComponent(PasswordField)))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(122, 122, 122)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(6, 6, 6)
-                                .addComponent(CancelButton, javax.swing.GroupLayout.PREFERRED_SIZE, 129, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(LoginButton, javax.swing.GroupLayout.PREFERRED_SIZE, 143, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                            .addComponent(PasswordField)
+                            .addComponent(LoginButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                 .addContainerGap(120, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -296,10 +292,21 @@ public class LoginDialog extends javax.swing.JDialog {
     }
     
     //Validar las credenciales hoy si
-    //CABE RECALCAR QUE ESTO NO ESTA COMPLETO, ME FALTARIA PONERLE MAS A ESTO PARA PODER VALIDAR LAS CREDENCIALES CORRECTAMENTE, LO QUE SE VE ES PRACTICAMENTE UN BORRADOR
     private boolean ValidateCredentials(String Username, String Password) {
-        //Usuarios de prueba
-        return (Username.equals("Admin") && Password.equals("12345")) || (Username.equals("Jugador1") && Password.equals("Pass1")) || (Username.equals("Test") && Password.equals("Test1"));
+        //Validar que el nombre de usuario y la contraseña no esten vacias
+        if (Username == null || Username.trim().isEmpty() || Password == null || Password.trim().isEmpty()  ) {
+            return false;
+        }
+        
+        //Usar el GameManager para validar
+        GameManager gameManager = GameManager.GetInstance();
+        Player LoggedPlayer = gameManager.Login(Username, Password);
+        
+        if (LoggedPlayer != null) {
+            return true; //Un login exitoso, hace que el GameManager ya estableza el CurrentPlayer
+        } else {
+            return false; //Login fallido
+        }
     }
     
     //Mostrar un mensaje de error
