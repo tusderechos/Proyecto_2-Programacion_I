@@ -346,17 +346,12 @@ public class MainMenu extends javax.swing.JFrame {
     */
     private void StrateGOButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_StrateGOButtonActionPerformed
         // TODO add your handling code here:
-        ShowStrategoSubmenu();
-        StrateGOButton.addActionListener(e -> {
-            
-            try {
-                //GameBoard GameBoard = new GameBoard();
-                //GameBoard.setVisible(true);
-                //this.dispose();
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "El tablero de juego aun no esta implementado.\nProximamente.", "Funcion en desarrollo", JOptionPane.INFORMATION_MESSAGE);
-            }
-        });
+        String[] Options = {"PARTIDA NUEVA"};
+        int Choice = JOptionPane.showOptionDialog(this, "STRATEGO - MARVEL HEROES\n\nSelecciona una opcion: ", "Stratego - Marvel Heroes", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, Options, Options[0]);
+        
+        if (Choice == 0) {
+            StartNewGame();
+        }
     }//GEN-LAST:event_StrateGOButtonActionPerformed
 
     /*
@@ -408,18 +403,6 @@ public class MainMenu extends javax.swing.JFrame {
     /*
         -->     LOGICA DE FUNCIONALIDADES    <--
     */
-    
-    /*
-        Mostrar el submenu de Stratego - Marvel Heroes
-    */
-    private void ShowStrategoSubmenu() {
-        String[] Options = {"PARTIDA NUEVA"}; //Arreglo de las opciones disponibles
-        
-        int Choice = JOptionPane.showOptionDialog(this, "STRATEGO - MARVEL HEROES\n\nSelecciona una opcion:", "Stratego - Marvel Heroes", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, Options, Options[0]);
-        if (Choice == 0) {
-            StartNewGame();
-        }
-    }
     
     /*
         Mostrar submenu de Mi Perfil

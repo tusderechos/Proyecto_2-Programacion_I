@@ -48,6 +48,7 @@ public class Configuration extends javax.swing.JFrame {
         GuardarConfig = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setBackground(new java.awt.Color(0, 0, 0));
 
         Titulo.setFont(new java.awt.Font("Arial", 1, 24)); // NOI18N
         Titulo.setText("CONFIGURACION");
