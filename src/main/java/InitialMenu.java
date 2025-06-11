@@ -61,6 +61,9 @@ class BackgroundPanel extends JPanel {
 
 //Menu de Inicio del juego
 public class InitialMenu extends JFrame {
+    private AudioManager audioManager;
+    private GameManager gameManager;
+    
     
     //Variables para tener una funcionalidad personalizada y que se mire masiso
     private BackgroundPanel MainBackgroundPanel;
@@ -71,8 +74,13 @@ public class InitialMenu extends JFrame {
      */
     
     public InitialMenu() {
+        gameManager = GameManager.GetInstance();
+        
         initComponents();
         SetupBackgroundandStyles();
+        
+        this.audioManager = AudioManager.getInstance();
+        this.audioManager.PlayMenuMusic(); //Musica de fondo
         
         Timer RepaintTimer = new Timer(100, e -> {
             setVisible(false);
@@ -83,6 +91,18 @@ public class InitialMenu extends JFrame {
         
         RepaintTimer.setRepeats(false);
         RepaintTimer.start();
+        
+        SetupAudioCleanup();
+    }
+    
+    private void SetupAudioCleanup() {
+        //limpiar audio al cerrar la ventana
+        this.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent WindowEvent) {
+                audioManager.StopMusic();
+            }
+        });
     }
     
     private void SetupBackgroundandStyles() {
@@ -286,6 +306,8 @@ public class InitialMenu extends JFrame {
         Button.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent evt) {
+                audioManager.PlayButtonHover();
+                
                 Color BrighterColor = new Color(Math.min(255, OriginalColor.getRed() + 30), Math.min(255, OriginalColor.getGreen() + 30), Math.min(255, OriginalColor.getBlue() + 30), OriginalColor.getAlpha());
                 Button.setBackground(BrighterColor);
             }
@@ -398,11 +420,14 @@ public class InitialMenu extends JFrame {
     //Evento de Crear Jugador
     private void CreatePlayerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CreatePlayerButtonActionPerformed
         // TODO add your handling code here:
+        audioManager.PlayButtonClick();
+        
         ShowCreatePlayerDialog createDialog = new ShowCreatePlayerDialog(this);
         String NewUsername = createDialog.ShowDialog();
 
         //Si la creacion fue exitosa, mostrar opcion para hacer un login automatico
         if (NewUsername != null) {
+            audioManager.PlayNotification();
             System.out.println("Jugador creado exitosamente: " + NewUsername);
 
             int Option = JOptionPane.showConfirmDialog(this, "Jugador '" + NewUsername + "' creado exitosamente!\n\n" + "Deseas iniciar sesion automaticamente con tu nueva cuenta?", "Jugador Creado - Login Automatico", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
@@ -426,18 +451,24 @@ public class InitialMenu extends JFrame {
     //Evento de Iniciar Sesion
     private void LoginButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_LoginButtonActionPerformed
         // TODO add your handling code here:
+        audioManager.PlayButtonClick();
+        
         LoginDialog LoginDialog = new LoginDialog(this);
         String AuthenticatedUser = LoginDialog.ShowDialog();
         
         if (AuthenticatedUser != null) {
+            audioManager.PlayNotification();
             System.out.println("Login exitoso para usuario: " + AuthenticatedUser);
             
             //Mostrar mensaje de exito
             JOptionPane.showMessageDialog(this, "Bienvenido " + AuthenticatedUser + "!\n" + "Accediendo al menu principal...", "Login exitoso", JOptionPane.INFORMATION_MESSAGE);
             
+            audioManager.FadeToMusic("hero_theme"); //cambiar a musica heroica
+            
             //Abrir el menu principal
             OpenMainMenu(AuthenticatedUser);
         } else {
+            audioManager.PlayInvalidMove(); //Sonido de error
             System.out.println("Login cancelado por el usuario");
         }        
     }//GEN-LAST:event_LoginButtonActionPerformed
@@ -445,9 +476,12 @@ public class InitialMenu extends JFrame {
     //Evento de Salir
     private void ExitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ExitButtonActionPerformed
         // TODO add your handling code here:
+        audioManager.PlayButtonClick();
+        
         int Respuesta = JOptionPane.showConfirmDialog(this, "Estas seguro de que quieres salir del juego?", "Confirmar salida", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 
         if (Respuesta == JOptionPane.YES_OPTION) {
+            audioManager.cleanup(); //una limpieza completa al audio
             System.exit(0);
         }
     }//GEN-LAST:event_ExitButtonActionPerformed

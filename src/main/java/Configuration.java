@@ -15,21 +15,15 @@ import javax.swing.*;
                                                                                                                          
 public class Configuration extends javax.swing.JFrame {                                                                                                                 
 
-    public static boolean TutorialMode = true; //Para indicar si el modo de tutorial esta activado
+    public static boolean TutorialMode = false; //Siempre falso
     
     /**
      * Creates new form Configuration
      */
     public Configuration() {
         initComponents();
-        
-        if (TutorialMode) {
-            BtnTutorial.setSelected(true);
-        } else {
-            BtnClasico.setSelected(true);
-        }
-        
         setLocationRelativeTo(null);
+        setTitle("Configuracion Marvel Stratego");
     }
 
     /**
@@ -43,87 +37,97 @@ public class Configuration extends javax.swing.JFrame {
 
         BgModes = new javax.swing.ButtonGroup();
         Titulo = new javax.swing.JLabel();
-        BtnTutorial = new javax.swing.JRadioButton();
-        BtnClasico = new javax.swing.JRadioButton();
-        GuardarConfig = new javax.swing.JButton();
+        BtnAceptar = new javax.swing.JButton();
+        ModoInfo = new javax.swing.JLabel();
+        DescripcionClasico = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setBackground(new java.awt.Color(0, 0, 0));
 
         Titulo.setFont(new java.awt.Font("Arial", 1, 24)); // NOI18N
+        Titulo.setForeground(new java.awt.Color(204, 0, 0));
         Titulo.setText("CONFIGURACION");
 
-        BgModes.add(BtnTutorial);
-        BtnTutorial.setFont(new java.awt.Font("Arial", 1, 16)); // NOI18N
-        BtnTutorial.setText("Modo Tutorial");
-
-        BgModes.add(BtnClasico);
-        BtnClasico.setFont(new java.awt.Font("Arial", 1, 16)); // NOI18N
-        BtnClasico.setText("Modo Clasico");
-
-        GuardarConfig.setFont(new java.awt.Font("Arial", 1, 14)); // NOI18N
-        GuardarConfig.setText("GUARDAR");
-        GuardarConfig.addActionListener(new java.awt.event.ActionListener() {
+        BtnAceptar.setFont(new java.awt.Font("Arial", 1, 14)); // NOI18N
+        BtnAceptar.setText("ACEPTAR");
+        BtnAceptar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                GuardarConfigActionPerformed(evt);
+                BtnAceptarActionPerformed(evt);
             }
         });
+
+        ModoInfo.setFont(new java.awt.Font("Arial", 1, 14)); // NOI18N
+        ModoInfo.setForeground(java.awt.Color.green);
+        ModoInfo.setText("MODO CLASICO ACTIVADO");
+
+        DescripcionClasico.setForeground(new java.awt.Color(102, 102, 102));
+        DescripcionClasico.setText("Fichas ocultas para maxima estrategia");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(98, 98, 98)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(BtnClasico)
-                    .addComponent(BtnTutorial)
-                    .addComponent(Titulo))
-                .addContainerGap(99, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(GuardarConfig)
-                .addGap(140, 140, 140))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(ModoInfo)
+                        .addGap(106, 106, 106))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(BtnAceptar)
+                        .addGap(149, 149, 149))))
+            .addGroup(layout.createSequentialGroup()
+                .addGap(99, 99, 99)
+                .addComponent(Titulo)
+                .addContainerGap(98, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(DescripcionClasico, javax.swing.GroupLayout.PREFERRED_SIZE, 223, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(17, 17, 17)
                 .addComponent(Titulo)
-                .addGap(37, 37, 37)
-                .addComponent(BtnTutorial)
-                .addGap(28, 28, 28)
-                .addComponent(BtnClasico)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 78, Short.MAX_VALUE)
-                .addComponent(GuardarConfig)
-                .addGap(40, 40, 40))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(ModoInfo)
+                .addGap(18, 18, 18)
+                .addComponent(DescripcionClasico)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 88, Short.MAX_VALUE)
+                .addComponent(BtnAceptar)
+                .addGap(80, 80, 80))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void GuardarConfigActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_GuardarConfigActionPerformed
+    private void BtnAceptarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnAceptarActionPerformed
         // TODO add your handling code here:
-        if (BtnTutorial.isSelected()) {
-            TutorialMode = true;
-        } else if (BtnClasico.isSelected()) {
-            TutorialMode = false;
-        } else {
-            JOptionPane.showMessageDialog(this, "Porfavor selecciona un modo antes de guardar.", "Configuracion", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
+        TutorialMode = false;
         
-        JOptionPane.showMessageDialog(this, "Configuracion gaurdada.", "Guardado", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(this, """
+                                            Configuracion confirmada!
+                                            
+                                             MODO CLASICO:
+                                                • Fichas ocultas activadas
+                                                • Click en tus fichas para revelar identidad
+                                                • Estrategia maxima habilitada
+                                            
+                                            Listo para la batalla Marvel!""", 
+                                            "Configuracion Lista", 
+                                            JOptionPane.INFORMATION_MESSAGE);
+        //Cerrar la ventana
         this.dispose();
-    }//GEN-LAST:event_GuardarConfigActionPerformed
+    }//GEN-LAST:event_BtnAceptarActionPerformed
 
     
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.ButtonGroup BgModes;
-    private javax.swing.JRadioButton BtnClasico;
-    private javax.swing.JRadioButton BtnTutorial;
-    private javax.swing.JButton GuardarConfig;
+    private javax.swing.JButton BtnAceptar;
+    private javax.swing.JLabel DescripcionClasico;
+    private javax.swing.JLabel ModoInfo;
     private javax.swing.JLabel Titulo;
     // End of variables declaration//GEN-END:variables
 }

@@ -13,6 +13,8 @@ import java.awt.*;
 
 
 public class ShowCreatePlayerDialog extends javax.swing.JDialog {
+    private AudioManager audioManager;
+    private GameManager gameManager;
 
     private JFrame ParentFrame;
     private String CreatedUsername;
@@ -27,8 +29,27 @@ public class ShowCreatePlayerDialog extends javax.swing.JDialog {
         this.CreatedUsername = null;
         this.PlayerCreated = false;
         
+        this.gameManager = GameManager.GetInstance();
+        
         initComponents();
         SetupCustomization();
+        
+        this.audioManager = AudioManager.getInstance();
+        audioManager.PlayMenuMusic();
+        
+        SetupAudioCleanup();
+    }
+    
+    /*
+        Metodo par poder parar la musica
+    */
+    private void SetupAudioCleanup() {
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                audioManager.StopMusic();
+            }
+        });
     }
     
     /*
@@ -128,6 +149,7 @@ public class ShowCreatePlayerDialog extends javax.swing.JDialog {
         Button.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent evt) {
+                audioManager.PlayButtonHover();
                 Button.setBackground(OriginalColor.brighter());
             }
             
@@ -167,6 +189,11 @@ public class ShowCreatePlayerDialog extends javax.swing.JDialog {
         jLabel1.setText("Usuario:");
 
         UsernameField.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        UsernameField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                UsernameFieldActionPerformed(evt);
+            }
+        });
         UsernameField.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 UsernameFieldKeyPressed(evt);
@@ -263,6 +290,7 @@ public class ShowCreatePlayerDialog extends javax.swing.JDialog {
     */
     private void CreateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CreateButtonActionPerformed
         // TODO add your handling code here:
+        audioManager.PlayButtonClick();
         AttemptCreatePlayer();
     }//GEN-LAST:event_CreateButtonActionPerformed
 
@@ -271,6 +299,7 @@ public class ShowCreatePlayerDialog extends javax.swing.JDialog {
     */
     private void CancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CancelButtonActionPerformed
         // TODO add your handling code here:
+        audioManager.PlayButtonClick();
         CancelCreation();
     }//GEN-LAST:event_CancelButtonActionPerformed
 
@@ -280,6 +309,7 @@ public class ShowCreatePlayerDialog extends javax.swing.JDialog {
     private void UsernameFieldKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_UsernameFieldKeyPressed
         // TODO add your handling code here:
         if (evt.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER) {
+            audioManager.PlayButtonHover();
             PasswordField.requestFocus();
         }
     }//GEN-LAST:event_UsernameFieldKeyPressed
@@ -290,6 +320,7 @@ public class ShowCreatePlayerDialog extends javax.swing.JDialog {
     private void PasswordFieldKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_PasswordFieldKeyPressed
         // TODO add your handling code here:
         if (evt.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER) {
+            audioManager.PlayButtonHover();
             ConfirmPasswordField.requestFocus();
         }
     }//GEN-LAST:event_PasswordFieldKeyPressed
@@ -300,9 +331,14 @@ public class ShowCreatePlayerDialog extends javax.swing.JDialog {
     private void ConfirmPasswordFieldKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_ConfirmPasswordFieldKeyPressed
         // TODO add your handling code here:
         if (evt.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER) {
+            audioManager.PlayButtonHover();
             AttemptCreatePlayer();
         }
     }//GEN-LAST:event_ConfirmPasswordFieldKeyPressed
+
+    private void UsernameFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_UsernameFieldActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_UsernameFieldActionPerformed
 
     /*
         -->     LOGICA PARA CREAR EL JUGADOR     <--
@@ -343,7 +379,7 @@ public class ShowCreatePlayerDialog extends javax.swing.JDialog {
             return;
         }
         
-        if (Password.length() < 5) {
+        if (Password.length() != 5) {
             showError("La contraseña debe tener al menos 4 caracteres");
             PasswordField.requestFocus();
             PasswordField.selectAll();
@@ -376,11 +412,15 @@ public class ShowCreatePlayerDialog extends javax.swing.JDialog {
         
         //Crear el jugador
         if (CreateNewPlayer(Username, Password)) {
+            audioManager.PlayVictoryHero(); //Sonido epico de exito
+            
             //Por si la creacion del jugador es exitosa
             CreatedUsername = Username;
             PlayerCreated = true;
             
             showSuccess("Jugador " + Username + " creado exitosamente!\n" + "Ahora puedes iniciar sesion con tu nueva cuenta.");
+        
+            dispose();
         } else {
             showError("Error al crear el jugador. Intentalo nuevamente");
         }
@@ -399,19 +439,8 @@ public class ShowCreatePlayerDialog extends javax.swing.JDialog {
         Verificar si el usuario ya existe
     */
     private boolean UsernameExists(String Username) {
-        //Implementacion temporal
-        //Aqui estaria conectando con el UserManager pero no lo he hecho
-        
-        //Usuarios existentes (son de prueba asi que despues los quito)
-        String[] ExistingUsers = {"Admin", "Player1", "Test"};
-        
-        for (String ExistingUser : ExistingUsers) {
-            if (ExistingUser.equalsIgnoreCase(Username)) {
-                return true;
-            }
-        }
-        
-        return false;
+        Player ExistingPlayer = gameManager.FindPlayerByUsername(Username);
+        return ExistingPlayer != null;
     }
     
     /*
@@ -422,12 +451,19 @@ public class ShowCreatePlayerDialog extends javax.swing.JDialog {
         //Aqui estaria conectando con el UserManager pero no lo he hecho
 
         try {
-            //Simulacion de una creacion exitosa
             System.out.println("Creando jugador: ");
             System.out.println("- Usuario: " + Username);
             System.out.println("- Contraseña: [PROTEGIDA]");
             
-            return true; //Si esto no fuera una simulacion, aqui estaria guardando la base de datos
+            boolean Success = gameManager.CreatePlayer(Username, Password);
+            
+            if (Success) {
+                System.out.println("Jugador creado exitosamente");
+            } else {
+                System.out.println("Error: no se pudo crear el jugador");
+            }
+            
+            return Success;
         } catch (Exception e) {
             System.out.println("Error creando jugador: " + e.getMessage());
             return false;
@@ -438,6 +474,7 @@ public class ShowCreatePlayerDialog extends javax.swing.JDialog {
         Mostrar un mensaje de error
     */
     private void showError(String Message) {
+        audioManager.PlayInvalidMove();
         JOptionPane.showMessageDialog(this, Message, "Error de Validacion", JOptionPane.ERROR_MESSAGE);
     }
     
@@ -445,6 +482,7 @@ public class ShowCreatePlayerDialog extends javax.swing.JDialog {
         Mostrar un mensaje de exito
     */
     private void showSuccess(String Message) {
+        audioManager.PlayNotification();
         JOptionPane.showMessageDialog(this, Message, "Jugador Creado", JOptionPane.INFORMATION_MESSAGE);
     }
     

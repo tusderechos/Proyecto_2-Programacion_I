@@ -15,7 +15,6 @@ import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.util.List;
-import java.util.ArrayList;
 
 public class MainMenu extends javax.swing.JFrame {
 
@@ -489,9 +488,10 @@ public class MainMenu extends javax.swing.JFrame {
             return;
         }
         
-        List<String> GameHistory = CurrentPlayer.GetGameLogs();
+       String[] GameHistory = CurrentPlayer.GetGameLogs();
         
-        if (GameHistory.isEmpty()) {
+       
+       if (GameHistory.length == 0) {
             JOptionPane.showMessageDialog(this, """
                                                 LOG DE MIS ULTIMOS JUEGOS
                                                 
@@ -504,8 +504,8 @@ public class MainMenu extends javax.swing.JFrame {
             HistoryText.append("Puntos totales: ").append(CurrentPlayer.GetPoints()).append("\n\n");
             HistoryText.append("Ultimas partidas:\n");
             
-            for (int i = 0; i < GameHistory.size(); i++) {
-                HistoryText.append((i + 1)).append(". ").append(GameHistory.get(i)).append("\n");
+            for (int i = 0; i < GameHistory.length; i++) {
+                HistoryText.append((i + 1)).append(". ").append(GameHistory[i]).append("\n");
             }
             
             JOptionPane.showMessageDialog(this, HistoryText.toString(), "Historial de Partidas", JOptionPane.INFORMATION_MESSAGE);
@@ -620,23 +620,43 @@ public class MainMenu extends javax.swing.JFrame {
         Mostrar el ranking de los jugadores
     */
     private void ShowRanking() {
-        List<Player> AllPlayers = gameManager.GetRanking();
-        List<Player> ActivePlayers = new ArrayList<>();
+        Player[] AllPlayers = gameManager.GetRanking();
         
-        //Filtrar solamente a los jugadores activos
-        for (Player Player : AllPlayers) {
-            if (Player.IsActive()) {
-                ActivePlayers.add(Player);
-            }
-        }
-        
-        if (ActivePlayers.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "RANKING DE JUGADORES\n\n" + "No hay jugadores registrados en el sistema", "Ranking Marvel Heroes", JOptionPane.INFORMATION_MESSAGE);
+        if (AllPlayers.length == 0) {
+            JOptionPane.showMessageDialog(this, """
+                                                RANKING DE JUGADORES
+                                                
+                                                No hay jugadores registrados en el sistema""", "Ranking Marvel Heroes", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
         
-        //Ordenar por puntos (de mayor a menor)
-        ActivePlayers.sort((p1, p2) -> Integer.compare(p2.GetPoints(), p1.GetPoints()));
+        //Arreglo temporal para jugadores activos
+        Player[] ActivePlayers = new Player[AllPlayers.length];
+        int ActiveCount = 0;
+        
+        for (int i = 0; i < AllPlayers.length; i++) {
+            Player player = AllPlayers[i];
+            if (player.IsActive()) {
+                ActivePlayers[ActiveCount] = player;
+                ActiveCount++;
+            }
+        }
+        
+        //Verificar si hay jugadores activos
+        if (ActiveCount == 0) {
+            //JOptionPane.showMessageDialog(this, );
+        }
+        
+        //Ordenar por puntos
+        for (int i = 0; i < ActiveCount - 1; i++) {
+            for (int j = 0; j < ActiveCount - 1 - i; j++) {
+                if (ActivePlayers[j].GetPoints() < ActivePlayers[j + 1].GetPoints()) {
+                    Player temp = ActivePlayers[j];
+                    ActivePlayers[j] = ActivePlayers[j - 1];
+                    ActivePlayers[j - 1] = temp;
+                }
+            }
+        }
         
         StringBuilder RankingText = new StringBuilder(); //Un StringBuilder que me va a servir para darle correctamente el puesto en el ranking al usuario
         RankingText.append("🏆 RANKING DE JUGADORES 🏆\n\n" );
@@ -644,8 +664,8 @@ public class MainMenu extends javax.swing.JFrame {
         int CurrentUserPosition = 0; //Para poder saber despues la posicion del jugador
         
         //for que va a estar contando desde 0 hasta el tamaño de ActivePlayers, osea que va a parar hasta que llegue al conteo de los jugadores activos, y que tambien sea menor a 10
-        for (int i = 0; i < ActivePlayers.size() && i < 10 ; i++) {
-            Player Player = ActivePlayers.get(i);
+        for (int i = 0; i < ActiveCount && i < 10 ; i++) {
+            Player Player = ActivePlayers[i];
             String Position = (i + 1) + ".";
             String Medal = "";
             
@@ -665,7 +685,13 @@ public class MainMenu extends javax.swing.JFrame {
             RankingText.append("\n🎯 Tu posición: #").append(CurrentUserPosition);
         }
         
-        RankingText.append("\n\nTotal de jugadores activos: " ).append(ActivePlayers.size());
+        RankingText.append("\n\nTotal de jugadores activos: " ).append(ActiveCount);
+        
+        //Estadisticas globales
+        RankingText.append("\n\nESTADISTICAS GLOBALES:");
+        RankingText.append("\nPartidas totales: ").append(gameManager.GetTotalGamesPlayed());
+        RankingText.append("\nVictorias Heroes: ").append(gameManager.getHeroesWins());
+        RankingText.append("\nVictorias Villanos: ").append(gameManager.GetVillainsWins());
         
         JOptionPane.showMessageDialog(this, RankingText.toString(), "Ranking Marvel Heroes", JOptionPane.INFORMATION_MESSAGE);
     }
@@ -681,12 +707,13 @@ public class MainMenu extends javax.swing.JFrame {
             return;
         }
         
-        List<String> GameHistory = CurrentPlayer.GetGameLogs();
-        int TotalGames = GameHistory.size();
+        String[] GameHistory = CurrentPlayer.GetGameLogs();
+        int TotalGames = GameHistory.length;
         int Victories = 0;
         
         //Cantar vistorias
-        for (String Game : GameHistory) {
+        for (int i = 0; i < GameHistory.length; i++) {
+            String Game = GameHistory[i];
             if (Game.toLowerCase().contains("victoria") || Game.toLowerCase().contains("gano")) {
                 Victories++;
             }
@@ -703,12 +730,21 @@ public class MainMenu extends javax.swing.JFrame {
         BattleText.append("• Derrotas: ").append(Defeats).append("\n");
         BattleText.append("• Porcentaje de vistoria: ").append(String.format("%.1f", WinRate)).append("\n");
         BattleText.append("• Puntos Totales: ").append(CurrentPlayer.GetPoints()).append("\n\n");
+        BattleText.append("• Partidas con Heroes: ").append(CurrentPlayer.GetGamesWithHeroes());
+        BattleText.append("• Partidas con Villanos: ").append(CurrentPlayer.GetGamesWithVillains());
         
-        if (TotalGames == 0) {
+        if (GameHistory.length == 0) {
             BattleText.append("Aun no has hecho ninguna batalla!\n");
             BattleText.append("Juega tu primera partida para comenzar tu leyenda.");
         } else {
-            BattleText.append("Proximamente encontraras:\n");
+            BattleText.append("ULTIMAS BATALLAS:\n");
+            
+            int MaxGames = GameHistory.length > 5 ? 5 : GameHistory.length;
+            for (int i = GameHistory.length - MaxGames; i < GameHistory.length; i++) {
+                BattleText.append("• ").append(GameHistory[i]).append("\n");
+            }
+            
+            BattleText.append("\nProximamente encontraras:\n");
             BattleText.append("• Batallas historicas de Marvel\n");
             BattleText.append("• Recreacion de combates famosos\n");
             BattleText.append("• Desafios especiales\n");

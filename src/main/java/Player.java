@@ -8,8 +8,6 @@
  * @author Hp
  */
 
-import java.util.ArrayList;
-import java.util.List;
 
 public class Player {
     
@@ -18,7 +16,10 @@ public class Player {
     private String Password;
     private int Points;
     private boolean Active;
-    private List<String> GameLogs;
+
+    private String[] GameLogs;
+    private int GameLogsCount;
+    private static final int MAX_LOGS = 20;
     
     public boolean ValidatePassword(String Password) {
         return this.Password.equals(Password);
@@ -35,7 +36,9 @@ public class Player {
         this.Active = true;
         this.GamesWithHeroes = 0;
         this.GamesWithVillains = 0;
-        this.GameLogs = new ArrayList<>();
+        
+        this.GameLogs = new String[MAX_LOGS];
+        this.GameLogsCount = 0;
     }
     
     /*
@@ -46,7 +49,7 @@ public class Player {
     }
     
     /*
-        Cambair el nombre de usuario
+        Cambiar el nombre de usuario
     */
     public void SetUsername(String Username) {
         this.Username = Username;
@@ -104,8 +107,12 @@ public class Player {
     /*
         Obtener el historial de juegos
     */
-    public List<String> GetGameLogs() {
-        return GameLogs;
+    public String[] GetGameLogs() {
+        String[] Result = new String[GameLogsCount];
+        for (int i = 0; i < GameLogsCount; i++) {
+            Result[i] = GameLogs[i];
+        }
+        return Result;
     }
 
     /*
@@ -166,11 +173,44 @@ public class Player {
         Mantiene solo los ultimos 20 registros
     */
     public void AddGameLog(String LogEntry) {
-        //Si hay mas de 20 logs, se elimina el mas antiguo
-        if (this.GameLogs.size() >= 20) {
-            this.GameLogs.remove(0);
+        if (GameLogsCount < MAX_LOGS) {
+            //Si hay espacio, se agrega
+            GameLogs[GameLogsCount] = LogEntry;
+            GameLogsCount++;
+        } else {
+            //Si esta lleno, mover todos los espacios a la izquierda y agregar al final
+            for (int i = 0; i < MAX_LOGS; i++) {
+                GameLogs[i] = GameLogs[i + 1];
+            }
+            GameLogs[MAX_LOGS - 1] = LogEntry; //GameLogsCounts se mantiene en MAX_LOGS
         }
-        this.GameLogs.add(LogEntry);
+    }
+    
+    /*
+        Obtener log especifico por indice
+    */
+    public String GetGameLog(int Indice) {
+        if (Indice >= 0 && Indice < GameLogsCount) {
+            return GameLogs[Indice];
+        }
+        return null;
+    }
+    
+    /*
+        Verificar si hay logs
+    */
+    public boolean HasGameLogs() {
+        return GameLogsCount > 0;
+    }
+    
+    /*
+        Limpiar historial de logs
+    */
+    public void ClearGameLogs() {
+        for (int i = 0; i < GameLogsCount; i++) {
+            GameLogs[i] = null;
+        }
+        GameLogsCount = 0;
     }
     
     /*

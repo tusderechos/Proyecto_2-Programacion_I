@@ -8,18 +8,23 @@
  * @author Hp
  */
 
-import java.util.*;
 import java.text.SimpleDateFormat;
-import javax.swing.JOptionPane;
+import java.util.Date;
 
 public class GameManager {
     private static GameManager Instance = null; //Variable para contener la unica instancia en el GameManager
     
+    //Constantes para tamaño maximo
+    private static final int MAX_PLAYERS = 100;
+    private static final int MAX_GLOBAL_LOGS = 1000;
+    
     /*
         Atributos de los datos del juego
     */
-    private ArrayList<Player> Players; //Una lista de todos los jugadores registrados
-    private ArrayList<String> GlobalGameLog; //Historial global de todas las partidas
+    private Player[] Players; //Arreglo de todos los jugadores registrados
+    private int PlayersCount; //Contador de jugadores en el arreglo
+    private String[] GlobalGameLog; //Historial global de todas las partidas
+    private int GlobalLogCount; //Contador de logs globales
     private int TotalGamesPlayed; //Contador de todas las partidas jugadas del usuario
     private int HeroesWins; //Contador de todas las victorias con el equipo de Heroes
     private int VillainWins; //Contador de todas las victorias con el equipo de Villanos
@@ -27,17 +32,16 @@ public class GameManager {
     
     public GameManager() {
         //Inicializar todas las listas vacias
-        Players = new ArrayList<>();
-        GlobalGameLog = new ArrayList<>();
+        Players = new Player[MAX_PLAYERS];
+        PlayersCount = 0;
+        GlobalGameLog = new String[MAX_GLOBAL_LOGS];
+        GlobalLogCount = 0;
         TotalGamesPlayed = 0;
         HeroesWins = 0;
         VillainWins = 0;
         CurrentPlayer = null;
         
-        //Creacion de usuarios de prueba solamente para el desarrollo
-        CreatePlayer("Admin", "12345");
-        CreatePlayer("Jugador1", "Pass1");
-        CreatePlayer("Test", "Test1");
+        LoadPlayers();
     }
     
     /*
@@ -51,18 +55,28 @@ public class GameManager {
         return Instance;
     }
     
+    
     /*
         Manejo de jugadores
     */
     public boolean CreatePlayer(String Username, String Password) {
         //Verificar que el username no este vacio
-        if (Username == null || Username.trim().isEmpty()) {
+        if (FindPlayerByUsername(Username) != null) {
+            return false; //Por si ya existe el usuario
+        }
+        
+        if (Password.length() != 5) {
+            return false;
+        }
+        
+        //Verificar que no se exceda el limite de jugadores
+        if (PlayersCount >= MAX_PLAYERS) {
             return false;
         }
 
         //Validar que el usuario sea unico
-        for (Player p : Players) {
-            if (p.GetUsername().equalsIgnoreCase(Username)) {
+        for (int i = 0; i < PlayersCount; i++) {
+            if (Players[i].GetUsername().equalsIgnoreCase(Username)) {
                 return false;
             }
         }
@@ -74,10 +88,25 @@ public class GameManager {
         
         //Crear el nuevo jugador y agregarlo a la lista
         Player NewPlayer = new Player(Username, Password);
-        Players.add(NewPlayer);
+        Players[PlayersCount] = NewPlayer;
+        PlayersCount++;
+        
+        SavePlayers(); //Guardar en archivo
         
         System.out.println("Jugador creado: " + Username);
         return true;
+    }
+    
+    /*
+        Validar el login
+    */
+    public boolean ValidateLogin(String Username, String Password) {
+        Player player = FindPlayerByUsername(Username);
+        
+        if (player != null && player.IsActive() && player.CheckPassword(Password)) {
+            return true; //Login exitoso
+        }
+        return false; //Login fallido
     }
     
     /*
@@ -85,7 +114,8 @@ public class GameManager {
     */
     public Player Login(String Username, String Password) {
         //Buscar el jugador en la lista
-        for (Player p : Players) {
+        for (int i = 0; i < PlayersCount; i++) {
+            Player p = Players[i];
             if (p.GetUsername().equalsIgnoreCase(Username) && p.ValidatePassword(Password)) {
                 CurrentPlayer = p; //Establecer como jugador actual
                 System.out.println("Login Exitoso: " + Username);
@@ -132,49 +162,63 @@ public class GameManager {
         
         //Cambiar la contraseña
         CurrentPlayer.SetPassword(NewPassword);
+        SavePlayers();
         return true;
     }
     
     /*
         Elimitar la cuenta del jugador actual
     */
-    public boolean DeleteAccount(String Password) {
-        //Verificar que si haya un jugador logueado
-        if (CurrentPlayer == null) {
+    public boolean DeleteAccount(String Username) {
+        Player Player = FindPlayerByUsername(Username);
+        if (Player != null) {
             return false;
         }
         
-        //Verificar la contraseña
-        if (!CurrentPlayer.ValidatePassword(Password)) {
-            return false;
-        }
+        Player.SetActive(false); //Marcar como inactivo
+        SavePlayers(); //Guardar cambios
         
-        //Marcar la cuenta como inactiva
-        CurrentPlayer.SetActive(false);
+        //Si es el jugador actual, hacer un logout
+        if (CurrentPlayer != null && CurrentPlayer.equals(Player)) {
+            CurrentPlayer = null;
+        }
         return true;
     }
     
     /*
         Ranking
     */
-    public ArrayList<Player> GetRanking() {
-        ArrayList<Player> ActivePlayers = new ArrayList<>();
+    public Player[] GetRanking() {
+        //Crear arreglo temporal para jugadores activos
+        Player[] ActivePlayers = new Player[PlayersCount];
+        int ActiveCount = 0;
+        
         //Filtrar solamente los jugadores activos
-        for (Player p : Players) {
-            if (p.IsActive()) {
-                ActivePlayers.add(p);
+        for (int i = 0; i < PlayersCount; i++) {
+            if (Players[i].IsActive()) {
+                ActivePlayers[ActiveCount] = Players[i];
+                ActiveCount++;
             }
         }
         
-        //Ordenar por puntos (mayor a menor)
-        Collections.sort(ActivePlayers, new Comparator<Player>() {
-            @Override
-            public int compare(Player p1, Player p2) {
-                return Integer.compare(p2.GetPoints(), p1.GetPoints());
+        //Ordenar por puntos
+        for (int i = 0; i < ActiveCount - 1; i++) {
+            for (int j = 0; j < ActiveCount - 1 - i; j++) {
+                if (ActivePlayers[i].GetPoints() < ActivePlayers[j + 1].GetPoints()) {
+                    Player Temp = ActivePlayers[i];
+                    ActivePlayers[j] = ActivePlayers[j + 1];
+                    ActivePlayers[j + 1] = Temp;
+                }
             }
-        });
+        }
         
-        return ActivePlayers;
+        //Crear arreglo del tamaño exacto para hacer un return
+        Player[] Result = new Player[ActiveCount];
+        for (int i = 0; i < ActiveCount; i++) {
+            Result[i] = ActivePlayers[i];
+        }
+        return Result;
+        
     }
     
     /*
@@ -182,8 +226,8 @@ public class GameManager {
     */
     public int GetActivePlayersCount() {
         int Count = 0;
-        for (Player p : Players) {
-            if (p.IsActive()) {
+        for (int i = 0; i < PlayersCount; i++) {
+            if (Players[i].IsActive()) {
                 Count++;
             }
         }
@@ -195,7 +239,7 @@ public class GameManager {
         Cuenta todos los jugador (los activos e inactivos)
     */
     public int GetTotalPlayersCount() {
-        return Players.size();
+        return PlayersCount;
     }
     
     /*
@@ -223,6 +267,11 @@ public class GameManager {
         Logs del juego
     */
     public void AddGameLog(String Winner, String Loser, String WinnerTeam, String LoserTeam, String EndType) {
+        //Verificar limite de logs globales
+        if (GlobalLogCount >= MAX_GLOBAL_LOGS) {
+            return;
+        }
+        
         //Formatear la fecha actual
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
         String Date = sdf.format(new Date());
@@ -242,7 +291,8 @@ public class GameManager {
         }
         
         //Agregar al log global
-        GlobalGameLog.add(log);
+        GlobalGameLog[GlobalLogCount] = log;
+        GlobalLogCount++;
         
         //Agregar a los logs de los jugadores
         Player WinnerPlayer = FindPlayerByUsername(Winner);
@@ -268,24 +318,28 @@ public class GameManager {
             LoserPlayer.AddGameLog(log);
             
             //Incrementar el contador segun el equipo
-            if (LoserPlayer.equals("HEROES")) {
+            if (LoserTeam.equals("HEROES")) {
                 LoserPlayer.IncrementGamesAsHeroes();
             } else {
                 LoserPlayer.IncrementGamesAsVillains();
             }
         }
         
-        //Incrementar el contador total de partidas
-        TotalGamesPlayed++;
+        TotalGamesPlayed++; //Incrementar el contador total de partidas
+        
+        SavePlayers(); //Guardar cambios
     } 
     
     /*
         Buscar un jugador por su nombre de usuario
     */
     public Player FindPlayerByUsername(String Username) {
-        for (Player p : Players) {
-            if (p.GetUsername().equalsIgnoreCase(Username)) {
-                return p;
+        if (Username == null) {
+            return null;
+        }
+        for (int i = 0; i < PlayersCount; i++) {
+            if (Players[i].GetUsername().equalsIgnoreCase(Username)) {
+                return Players[i];
             }
         }
 
@@ -296,17 +350,99 @@ public class GameManager {
     /*
         Obtener jugadores disponibles para jugar (excluyendo al actual)
     */
-    public ArrayList<Player> GetAvailableOpponents() {
-        ArrayList<Player> Opponents = new ArrayList<>();
+    public Player[] GetAvailableOpponents() {
+        //Crear arreglo temporal
+        Player[] Opponents = new Player[PlayersCount];
+        int OpponentCount = 0;
         
         //Agregar a todos los jugadores activos excepto el actual
-        for (Player p : Players) {
-            if (p.IsActive() && !p.equals(CurrentPlayer)) {
-                Opponents.add(p);
+        for (int i = 0; i < PlayersCount; i++) {
+            Player p = Players[i];
+            if (p != null && p.IsActive() && !p.equals(CurrentPlayer)) {
+                Opponents[OpponentCount] = p;
+                OpponentCount++;
             }
         }
         
-        return Opponents;
+        //Crear arreglo del tamaño exacto para hacer un return
+        Player[] Result = new Player[OpponentCount];
+        for (int i = 0; i < OpponentCount; i++) {
+            Result[i] = Opponents[i];
+        }
         
+        return Result;
+        
+    }
+    
+    /*
+        Obtener log globales
+    */
+    public String[] GetLogsGlobales() {
+        String[] Resultado = new String[GlobalLogCount];
+        for (int i = 0; i < GlobalLogCount; i++) {
+            Resultado[i] = GlobalGameLog[i];
+        }
+        return Resultado;
+        
+    }
+    
+    /*
+        Cargar jugadores desde archivo
+    */
+    private void LoadPlayers() {
+        
+    }
+    
+    /*
+        Guardar en archivo
+    */
+    private void SavePlayers() {
+        try {
+            System.out.println("datos guardados en memoria");
+        } catch (Exception e) {
+            System.out.println("error al guardar: " + e.getMessage());
+        }
+    }
+    
+    /*
+        Limpiar todos los datos
+    */
+    public void LimpiarDatos() {
+        //Limpiar Usuarios
+        for (int i = 0; i < PlayersCount; i++) {
+            Players[i] = null;
+        }
+        
+        PlayersCount = 0;
+        
+        //Limpiar logs globales
+        for (int i = 0; i < GlobalLogCount; i++) {
+            GlobalGameLog[i] = null;
+        }
+        GlobalLogCount = 0;
+        
+        //Reiniciar contadores
+        TotalGamesPlayed = 0;
+        HeroesWins = 0;
+        VillainWins = 0;
+        CurrentPlayer = null;
+    }
+    
+    /*
+        Verificar si se puede iniciar una partida
+    */
+    public boolean CanStartGame() {
+        return GetActivePlayersCount() >= 2;
+    }
+    
+    /*
+        Obtener informacion del jugador actual
+    */
+    public String GetCurrentPlayerInfo() {
+        if (CurrentPlayer == null) {
+            return "No hay jugador logueado";
+        }
+        
+        return "Usuario: " + CurrentPlayer.GetUsername() + "\nPuntos: " + CurrentPlayer.GetPoints() + "\nJuegos como Heroes: " + CurrentPlayer.GetGamesWithHeroes() + "\nJuegos como Villanos: " + CurrentPlayer.GetGamesWithVillains();
     }
 }
