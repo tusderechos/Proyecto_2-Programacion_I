@@ -17,6 +17,8 @@ public class LoginDialog extends javax.swing.JDialog {
     private String AuthenticatedUser;
     private boolean LoginSuccessful;
     
+    private AudioManager audioManager;
+    
     /**
      * Creates new form LoginDialog
      */
@@ -26,9 +28,27 @@ public class LoginDialog extends javax.swing.JDialog {
         this.AuthenticatedUser = null;
         this.LoginSuccessful = false;
         
+        audioManager = AudioManager.getInstance();
+        
         
         initComponents();
         SetupCustomization();
+        
+        SetupAudioCleanup();
+    }
+    
+    /*
+        Cleanup del audio al cerrar
+    */
+    private void SetupAudioCleanup() {
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                if (audioManager != null) {
+                    audioManager.StopMusic();
+                }
+            }
+        });
     }
     
     //Configuraciones adicionales despues del initComponents() porque uno nunca sabe
@@ -50,7 +70,7 @@ public class LoginDialog extends javax.swing.JDialog {
     
     //Personalizar los componentes creados en el Design
     private void CustomizeComponents() {
-        CustomizeComponentsRecursively(getContentPane()); //Buscar y personalozar componentes por nombre
+        CustomizeComponentsRecursively(getContentPane()); //Buscar y personalizar componentes por nombre
     }
     
     //Aplicar estilos recursivamente
@@ -58,7 +78,7 @@ public class LoginDialog extends javax.swing.JDialog {
         for (Component Comp : Container.getComponents()) {
             if (Comp instanceof JButton) {
                 StyleButton((JButton) Comp);
-            } if (Comp instanceof JTextField || Comp instanceof JPasswordField) {
+            } else if (Comp instanceof JTextField || Comp instanceof JPasswordField) {
                 StyleTextField(Comp);
             } else if (Comp instanceof JLabel) {
                 StyleLabel((JLabel) Comp);
@@ -113,6 +133,7 @@ public class LoginDialog extends javax.swing.JDialog {
         Button.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent evt) {
+                audioManager.PlayButtonHover();
                 Button.setBackground(OriginalColor.brighter());
             }
             
@@ -138,10 +159,14 @@ public class LoginDialog extends javax.swing.JDialog {
         UsernameField = new javax.swing.JTextField();
         PasswordField = new javax.swing.JPasswordField();
         CancelButton = new javax.swing.JButton();
+        jLabel1 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setAlwaysOnTop(true);
 
+        LoginButton.setBackground(new java.awt.Color(0, 204, 51));
+        LoginButton.setFont(new java.awt.Font("Arial", 1, 12)); // NOI18N
+        LoginButton.setForeground(new java.awt.Color(0, 0, 0));
         LoginButton.setText("INICIAR SESION");
         LoginButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -149,6 +174,7 @@ public class LoginDialog extends javax.swing.JDialog {
             }
         });
 
+        UsernameField.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         UsernameField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 UsernameFieldActionPerformed(evt);
@@ -160,6 +186,7 @@ public class LoginDialog extends javax.swing.JDialog {
             }
         });
 
+        PasswordField.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         PasswordField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 PasswordFieldActionPerformed(evt);
@@ -171,12 +198,18 @@ public class LoginDialog extends javax.swing.JDialog {
             }
         });
 
+        CancelButton.setBackground(new java.awt.Color(204, 0, 0));
+        CancelButton.setFont(new java.awt.Font("Arial", 1, 12)); // NOI18N
+        CancelButton.setForeground(new java.awt.Color(255, 255, 255));
         CancelButton.setText("CANCELAR");
         CancelButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 CancelButtonActionPerformed(evt);
             }
         });
+
+        jLabel1.setFont(new java.awt.Font("Arial", 1, 24)); // NOI18N
+        jLabel1.setText("INICIO DE SESION");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -192,13 +225,18 @@ public class LoginDialog extends javax.swing.JDialog {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(UsernameField, javax.swing.GroupLayout.DEFAULT_SIZE, 167, Short.MAX_VALUE)
                             .addComponent(PasswordField)
-                            .addComponent(LoginButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                .addContainerGap(120, Short.MAX_VALUE))
+                            .addComponent(LoginButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(90, 90, 90)
+                        .addComponent(jLabel1)))
+                .addContainerGap(99, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(84, Short.MAX_VALUE)
+                .addGap(17, 17, 17)
+                .addComponent(jLabel1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 39, Short.MAX_VALUE)
                 .addComponent(UsernameField, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(PasswordField, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -216,25 +254,31 @@ public class LoginDialog extends javax.swing.JDialog {
     
     private void UsernameFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_UsernameFieldActionPerformed
         // TODO add your handling code here:
+        audioManager.PlayButtonHover();
+        PasswordField.requestFocus();
     }//GEN-LAST:event_UsernameFieldActionPerformed
 
     private void PasswordFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_PasswordFieldActionPerformed
         // TODO add your handling code here:
+        audioManager.PlayButtonHover();
     }//GEN-LAST:event_PasswordFieldActionPerformed
 
     private void LoginButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_LoginButtonActionPerformed
         // TODO add your handling code here:
+        audioManager.PlayButtonClick();
         AttemptLogin();
     }//GEN-LAST:event_LoginButtonActionPerformed
 
     private void CancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CancelButtonActionPerformed
         // TODO add your handling code here:
+        audioManager.PlayButtonClick();
         CancelLogin();
     }//GEN-LAST:event_CancelButtonActionPerformed
 
     private void UsernameFieldKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_UsernameFieldKeyPressed
         // TODO add your handling code here:
         if (evt.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER) {
+            audioManager.PlayButtonHover();
             PasswordField.requestFocus();
         }
     }//GEN-LAST:event_UsernameFieldKeyPressed
@@ -242,6 +286,7 @@ public class LoginDialog extends javax.swing.JDialog {
     private void PasswordFieldKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_PasswordFieldKeyPressed
         // TODO add your handling code here:
         if (evt.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER) {
+            audioManager.PlayButtonHover();
             AttemptLogin();
         }
     }//GEN-LAST:event_PasswordFieldKeyPressed
@@ -311,11 +356,13 @@ public class LoginDialog extends javax.swing.JDialog {
     
     //Mostrar un mensaje de error
     private void showError(String Mensaje) {
+        audioManager.PlayInvalidMove();
         JOptionPane.showMessageDialog(this, Mensaje, "Error de Login", JOptionPane.ERROR_MESSAGE);
     }
     
     //Mostrar un mensaje de exito
     private void showSuccess(String Mensaje) {
+        audioManager.PlayNotification();
         JOptionPane.showMessageDialog(this, Mensaje, "Login Exitoso", JOptionPane.INFORMATION_MESSAGE);
     }
     
@@ -359,5 +406,6 @@ public class LoginDialog extends javax.swing.JDialog {
     private javax.swing.JButton LoginButton;
     private javax.swing.JPasswordField PasswordField;
     private javax.swing.JTextField UsernameField;
+    private javax.swing.JLabel jLabel1;
     // End of variables declaration//GEN-END:variables
 }

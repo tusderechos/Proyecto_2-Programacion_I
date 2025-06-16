@@ -18,7 +18,7 @@ import javax.swing.JFrame;
 
 //Panel personalizado con imagen de fondo
 class BackgroundPanel extends JPanel {
-    private BufferedImage BackgroundImage;
+    private final BufferedImage BackgroundImage;
     
     public BackgroundPanel(BufferedImage BackgroundImage) {
         this.BackgroundImage = BackgroundImage;
@@ -61,8 +61,8 @@ class BackgroundPanel extends JPanel {
 
 //Menu de Inicio del juego
 public class InitialMenu extends JFrame {
-    private AudioManager audioManager;
-    private GameManager gameManager;
+    private final AudioManager audioManager;
+    private final GameManager gameManager;
     
     
     //Variables para tener una funcionalidad personalizada y que se mire masiso
@@ -79,8 +79,8 @@ public class InitialMenu extends JFrame {
         initComponents();
         SetupBackgroundandStyles();
         
-        this.audioManager = AudioManager.getInstance();
-        this.audioManager.PlayMenuMusic(); //Musica de fondo
+        audioManager = AudioManager.getInstance();
+        audioManager.PlayMenuMusic(); //Musica de fondo
         
         Timer RepaintTimer = new Timer(100, e -> {
             setVisible(false);
@@ -100,7 +100,9 @@ public class InitialMenu extends JFrame {
         this.addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosing(java.awt.event.WindowEvent WindowEvent) {
-                audioManager.StopMusic();
+                if (audioManager != null) {
+                    audioManager.StopMusic();
+                }
             }
         });
     }
@@ -326,6 +328,11 @@ public class InitialMenu extends JFrame {
     System.out.println("Abriendo menu principal para usuario: " + Username);
     
         try {
+            //Fade out
+            if (audioManager != null) {
+                audioManager.FadeToMusic("hero_theme");
+            }
+            
             //Cerrar la ventana actual
             dispose();
 
@@ -345,9 +352,15 @@ public class InitialMenu extends JFrame {
             // Reabrir InitialMenu si hay error
             SwingUtilities.invokeLater(() -> {
                 try {
-                    new InitialMenu().setVisible(true);
+                    InitialMenu newMenu = new InitialMenu();
+                    newMenu.setVisible(true);
                 } catch (Exception ex) {
                     System.out.println("Error critico reabriendo InitialMenu: " + ex.getMessage());
+                    
+                    if (audioManager != null) {
+                        audioManager.cleanup();
+                    }
+                    
                     System.exit(1);
                 }
             });
@@ -478,11 +491,27 @@ public class InitialMenu extends JFrame {
         // TODO add your handling code here:
         audioManager.PlayButtonClick();
         
+        //Sonido mas suave para confirmacion
+        if (audioManager != null) {
+            audioManager.PlayNotification(); //En vez de otro click
+        }
+        
         int Respuesta = JOptionPane.showConfirmDialog(this, "Estas seguro de que quieres salir del juego?", "Confirmar salida", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 
         if (Respuesta == JOptionPane.YES_OPTION) {
-            audioManager.cleanup(); //una limpieza completa al audio
-            System.exit(0);
+            if (audioManager != null) {
+                try {
+                    Thread.sleep(200);
+                    audioManager.cleanup();
+                } catch (Exception e) {
+                    audioManager.cleanup();
+                }
+                System.exit(0);
+            } else {
+                if (audioManager != null) {
+                    audioManager.PlayButtonHover(); //Sonido suave de cancelacion
+                }
+            }
         }
     }//GEN-LAST:event_ExitButtonActionPerformed
 

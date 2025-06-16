@@ -13,8 +13,8 @@ import java.awt.*;
 
 
 public class ShowCreatePlayerDialog extends javax.swing.JDialog {
-    private AudioManager audioManager;
-    private GameManager gameManager;
+    private final AudioManager audioManager;
+    private final GameManager gameManager;
 
     private JFrame ParentFrame;
     private String CreatedUsername;
@@ -22,6 +22,7 @@ public class ShowCreatePlayerDialog extends javax.swing.JDialog {
     
     /**
      * Creates new form ShowCreatePlayerDialog
+     * @param Parent
      */
     public ShowCreatePlayerDialog(JFrame Parent) {
         super(Parent, true); //Modal Dialog
@@ -380,7 +381,7 @@ public class ShowCreatePlayerDialog extends javax.swing.JDialog {
         }
         
         if (Password.length() != 5) {
-            showError("La contraseña debe tener al menos 4 caracteres");
+            showError("La contraseña debe tener exactamente 5 caracteres");
             PasswordField.requestFocus();
             PasswordField.selectAll();
             return;
@@ -396,7 +397,7 @@ public class ShowCreatePlayerDialog extends javax.swing.JDialog {
         
         //Validar los caracteres especiales en el usuario
         if (!Username.matches("[a-zA-Z0-9_]+$")) {
-            showError("El usuario solo puede contener letas, numero y guion bajo");
+            showError("El usuario solo puede contener letras, numero y guion bajo");
             UsernameField.requestFocus();
             UsernameField.selectAll();
             return;

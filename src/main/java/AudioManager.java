@@ -30,13 +30,13 @@ public class AudioManager {
     private static final int MAX_MUSIC = 10;
     
     //Arreglos de nombres y clips de sonidos
-    private String[] SoundEffectNames;
-    private Clip[] SoundEffectClips;
+    private final String[] SoundEffectNames;
+    private final Clip[] SoundEffectClips;
     private int SoundEffectCount;
     
     //Arreglos de nombres y clips de musica
-    private String[] MusicTrackNames;
-    private Clip[] MusicTrackClips;
+    private final String[] MusicTrackNames;
+    private final Clip[] MusicTrackClips;
     private int MusicTrackCount;
     
     //Control de reproduccion
@@ -90,8 +90,8 @@ public class AudioManager {
             addMusicTrack("villain_theme", "sounds/music/villain_theme.wav");
             addMusicTrack("battle_music", "sounds/music/battle_music.wav");
             addMusicTrack("menu_music", "sounds/music/menu_music.wav");
-            addMusicTrack("vistory_hero", "sounds/music/victory_hero.wav");
-            addMusicTrack("vistory_villain", "sounds/music/victory_villain.wav");
+            addMusicTrack("victory_hero", "sounds/music/victory_hero.wav");
+            addMusicTrack("victory_villain", "sounds/music/victory_villain.wav");
             
             //Efectos de sonido generales
             addSoundEffect("button_click", "sounds/sfx/button_click.wav");
@@ -225,7 +225,10 @@ public class AudioManager {
             if (AudioSrc == null) {
                 File AudioFile = new File(FilePath);
                 if (!AudioFile.exists()) {
-                    return null;
+                    AudioFile = new File("src/main/resources/" + FilePath);
+                    if (!AudioFile.exists()) {
+                        return null;
+                    }
                 }
                 AudioSrc = new FileInputStream(AudioFile);
             }
@@ -253,7 +256,7 @@ public class AudioManager {
             
             byte[] AudioData = GenerateTone(Frequency, Duration, 0.3f);
             
-            AudioFormat Format = new AudioFormat(4100, 16, 1, true, false);
+            AudioFormat Format = new AudioFormat(44100, 16, 1, true, false);
             AudioInputStream AudioInputStream = new AudioInputStream(new ByteArrayInputStream(AudioData), Format, AudioData.length / Format.getFrameSize());
             
             Clip Clip = AudioSystem.getClip();
@@ -299,7 +302,7 @@ public class AudioManager {
         byte[] AudioData = new byte[Samples * 2];
         
         for (int i = 0; i < Samples; i++) {
-            double Time = (double) i / Samples;
+            double Time = (double) i / SampleRate;
             double Wave = Math.sin(2 * Math.PI * Frequency * Time);
             
             //Envelope para evitar los clicks
@@ -307,7 +310,7 @@ public class AudioManager {
             if (i < SampleRate * 0.1) {
                 Envelope = (double) i / (SampleRate * 0.1);
             } else if (i > Samples - SampleRate * 0.1) {
-                Envelope = (double) (Samples - 1) / (SampleRate * 0.1);
+                Envelope = (double) (Samples - i) / (SampleRate * 0.1);
             }
             
             short Sample = (short) (Wave * Envelope * Volume * Short.MAX_VALUE);
@@ -323,39 +326,43 @@ public class AudioManager {
         -->     METODOS PARA OBTENER FRECUENCIAS SINTETICAS     <--
     */
     private float GetSyntheticMusicFrequency(String TrackName) {
-        String[] TrackNames = {"hero_theme", "villain_theme", "battle_music", "menu_music", "victory_hero", "victory_villain"};
-        float[] Frequencies = {440.0f, 220.0f, 523.25f, 329.63f, 659.25f, 185.0f};
-        
-        for (int i = 0; i < TrackNames.length; i++) {
-            if (TrackNames[i].equals(TrackName)) {
-                return Frequencies[i];
-            }
+        switch (TrackName) {
+            case "hero_theme": return 440.0f;
+            case "villain_theme": return 220.0f;
+            case "battle_music": return 523.25f;
+            case "menu_music": return 329.63f;
+            case "victory_hero": return 659.25f;
+            case "victory_villain": return 185.0f;
+            default: return 440.0f;
         }
-        return 440.0f; //Default
     }
     
     private float GetSyntheticSFXFrequency(String EffectName) {
-        String[] EffectNames = {"button_click", "button_hover", "piece_move", "piece_capture", "battle_clash", "bomb_explosion", "notification", "invalid_move"};
-        float[] Frequencies = {1000.0f, 800.0f, 600.0f, 1200.0f, 200.0f, 100.0f, 880.0f, 150.0f};
-        
-        for (int i = 0; i < EffectNames.length; i++) {
-            if (EffectNames[i].equals(EffectName)) {
-                return Frequencies[i];
-            }
+        switch (EffectName) {
+            case "button_click": return 1000.0f;
+            case "button_hover": return 800.0f;
+            case "piece_move": return 600.0f;
+            case "piece_capture": return 1200.0f;
+            case "battle_clash": return 200.0f;
+            case "bomb_explosion": return 100.0f;
+            case "notification": return 850.0f;
+            case "invalid_move": return 150.0f;
+            default: return 550.0f;
         }
-        return 500.0f; //Default
     }
     
     private int GetSyntheticSFXDuration(String EffectName) {
-        String[] EffectNames = {"button_click", "button_hover", "piece_move", "piece_capture", "battle_clash", "bomb_explosion", "notification", "invalid_move"};
-        int[] Durations = {100, 50, 200, 300, 500, 800, 400, 250};
-        
-        for (int i = 0; i < EffectNames.length; i++) {
-            if (EffectNames[i].equals(EffectName)) {
-                return Durations[i];
-            }
+        switch (EffectName) {
+            case "button_click": return 100;
+            case "button_hover": return 50;
+            case "piece_move": return 200;
+            case "piece_capture": return 300;
+            case "battle_clash": return 500;
+            case "bomb_explosion": return 800;
+            case "notification": return 400;
+            case "invalid_move": return 250;
+            default: return 200;
         }
-        return 200; //Default
     }
     
     /*
@@ -405,36 +412,18 @@ public class AudioManager {
             try {
                 Clip SFXClip = FindSoundEffectClip(EffectName);
                 if (SFXClip != null) {
-                    Clip ClipCopy = DuplicateClip(SFXClip); //Crea una copia para multiples reproducciones
-                    if (ClipCopy != null) {
-                        SetVolume(ClipCopy, sfxVolume * MasterVolume);
-                        ClipCopy.setFramePosition(0);
-                        ClipCopy.start();
-                        
-                        //Limpiar cuando termine
-                        ClipCopy.addLineListener(event -> {
-                            if (event.getType() == LineEvent.Type.STOP) {
-                                ClipCopy.close();
-                            }
-                        });
+                    //Detener y reiniciar el clip si esta reproduciendose
+                    if (SFXClip.isRunning()) {
+                        SFXClip.stop();
                     }
+                    SFXClip.setFramePosition(0); //Volver al inicio
+                    SetVolume(SFXClip, sfxVolume * MasterVolume);
+                    SFXClip.start();
                 }
             } catch (Exception e) {
                 System.err.println("Error reproduciendo efecto: " + e.getMessage());
             }
         });
-    }
-    
-    /*
-        Duplica un clip para permitir multiples reproducciones
-    */
-    public Clip DuplicateClip(Clip OriginalClip) {
-        try {
-            Clip NewClip = AudioSystem.getClip();
-            return OriginalClip;
-        } catch (Exception e) {
-            return OriginalClip; //Fallback
-        }
     }
     
     /*
@@ -445,8 +434,163 @@ public class AudioManager {
             CurrentMusic.stop();
             CurrentMusic.setFramePosition(0);
             IsMusicPlaying = false;
-            System.out.println("Musica detenida.");
+            System.out.println("musica detenida");
         }
+    }
+    
+    /*
+        Duplica un clip para permitir multiples reproducciones
+    */
+    public Clip DuplicateClip(Clip OriginalClip) {
+        try {
+            if (OriginalClip.isOpen()) {
+                //Encontrar el clip original para obtener los datos
+                for (int i = 0; i < SoundEffectCount; i++) {
+                    if (SoundEffectClips[i] == OriginalClip) {
+                        //Recrear el clip desde el archivo
+                        return RecreateClip(SoundEffectNames[i]);
+                    }
+                }
+            }
+            return AudioSystem.getClip(); //Si no es posible duplicar, se crea un nuevo clip
+        } catch (Exception e) {
+            System.err.println("Error duplicando clip: " + e.getMessage());
+            return null; //Fallback
+        }
+    }
+    
+    /*
+        Metodo helper para recrear clips
+    */
+    private Clip RecreateClip(String EffectName) {
+        try {
+            //Para efectos sinteticos, regenerar
+            if (IsSyntheticEffect(EffectName)) {
+                return GenerateSyntheticSFX(EffectName);
+            } else {
+                //Para archivos, cargar de nuevo
+                String FilePath = GetFilePathForEffect(EffectName);
+                return LoadAudioClip(FilePath);
+            }
+        } catch (Exception e) {
+            System.err.println("Error recreando clip para " + EffectName + ": " + e.getMessage());
+            return null;
+        }
+    }
+    
+    /*
+        Metodo para ver si un efecto es sintetico
+    */
+    private boolean IsSyntheticEffect(String EffectName) {
+        String[] SyntheticEffects = {
+            //Efectos de UI
+            "button_click",
+            "button_hover",
+            "piece_hover",
+            "notification",
+            "invalid_move",
+            
+            //Efectos de juego
+            "piece_move",
+            "piece_capture",
+            "game_start",
+            "turn_change",
+            
+            //Efectos de batalla
+            "battle_clash",
+            "hero_wins",
+            "villain_wins",
+            "bomb_explosion",
+            "earth_captured",
+            
+            //Voces de personajes
+            "iron_man_attack",
+            "captain_america_attack",
+            "thor_attack",
+            "hulk_attack",
+            "thanos_attack",
+            "loki_attack",
+            "red_skull_attack",
+        };
+        
+        //Buscar en el arreglo si el efecto es sintetico
+        for (int i = 0; i < SyntheticEffects.length; i++) {
+            if (SyntheticEffects[i].equals(EffectName)) {
+                return true; //Es un sonido sintetico
+            }
+        }
+        return false; //No es un sonido sintetico
+    }
+    
+    /*
+        Metodo para obtener el path a los archivos de sonido
+    */
+    private String GetFilePathForEffect(String EffectName) {
+        //Efectos de UI
+        if (EffectName.equals("button_click")) return "sounds/sfx/button_click.WAV";
+        if (EffectName.equals("button_hover")) return "sounds/sfx/button_hover.WAV";
+        if (EffectName.equals("piece_hover")) return "sounds/sfx/piece_hover.WAV";
+        if (EffectName.equals("notification")) return "sounds/sfx/notification.WAV";
+        if (EffectName.equals("invalid_move")) return "sounds/sfx/invalid_move.WAV";
+        
+        //Efectos del juego
+        if (EffectName.equals("piece_move")) return "sounds/sfx/piece_move.WAV";
+        if (EffectName.equals("piece_capture")) return "sounds/sfx/piece_captured.WAV";
+        if (EffectName.equals("game_start")) return "sounds/sfx/gam_start.WAV";
+        if (EffectName.equals("turn_change")) return "sounds/sfx/turn_change.WAV";
+        
+        //Efectos de batalla
+        if (EffectName.equals("battle_clash")) return "sounds/battle/battle_clash.WAV";
+        if (EffectName.equals("hero_wins")) return "sounds/battle/hero_wins.WAV";
+        if (EffectName.equals("villain_wins")) return "sounds/battle/villain_wins.WAV";
+        if (EffectName.equals("bomb_explosion")) return "sounds/battle/bomb_explosion.WAV";
+        if (EffectName.equals("earth_captured")) return "sounds/battle/earth_captured.WAV";
+        
+        //Voces de heroes
+        if (EffectName.equals("iron_man_attack")) return "sounds/voices/iron_man_attack.WAV";
+        if (EffectName.equals("captain_america_attack")) return "sounds/voices/captain_america_attack.WAV";
+        if (EffectName.equals("thor_attack")) return "sounds/voices/thor_attack.WAV";
+        if (EffectName.equals("hulk_attack")) return "sounds/voices/hulk_attack.WAV";
+        
+        //Voces de villanos
+        if (EffectName.equals("thanos_attack")) return "sounds/voices/thanos_attack.WAV";
+        if (EffectName.equals("loki_attack")) return "sounds/voices/loki_attack.WAV";
+        if (EffectName.equals("red_skull_attack")) return "sounds/voices/red_skull_attack.WAV";
+        
+        //Ruta por defecto para efectos no mapeado
+        return "sounds/sfx/" + EffectName + "/wav";
+    }
+    
+    /*
+        Mapear nombres de musica a sus rutas de archivos
+    */
+    private String GetFilePathForMusic(String TrackName) {
+        if (TrackName.equals("hero_theme")) return "sounds/music/hero_theme.wav";
+        if (TrackName.equals("villain_theme")) return "sounds/music/villain_theme.wav";
+        if (TrackName.equals("battle_music")) return "sounds/music/battle_music.wav";
+        if (TrackName.equals("menu_music")) return "sounds/music/menu_music.wav";
+        if (TrackName.equals("victory_hero")) return "sounds/music/victory_hero.wav";
+        if (TrackName.equals("victory_villain")) return "sounds/music/victory_villain.wav";
+        
+        
+        return "sounds/music" + TrackName + ".wav"; //Ruta por defecto para musica no mapeada
+    }
+    
+    /*
+        metodo extra
+    */
+    private boolean IsSyntheticMusic(String TrackName) {
+        //Lista de musica que se genera sinteticamente
+        String[] SyntheticTrack = {"hero_theme", "villain_theme", "battle_music", "menu_music", "victory_hero", "victory_villain"};
+        
+        //Buscar en el arreglo
+        for (int i = 0; i < SyntheticTrack.length; i++) {
+            if (SyntheticTrack[i].equals(TrackName)) {
+                return true;
+            }
+        }
+        return false;
+        
     }
     
     /*
@@ -501,7 +645,7 @@ public class AudioManager {
         new Thread(() -> {
             try {
                 float OriginalVolume = MusicVolume * MasterVolume;
-                for (int i = 10; i >= 10; i--) {
+                for (int i = 10; i >= 0; i--) {
                     SetVolume(CurrentMusic, OriginalVolume * i / 10f);
                     Thread.sleep(50);
                 }
@@ -520,8 +664,11 @@ public class AudioManager {
             FloatControl VolumeControl = (FloatControl) Clip.getControl(FloatControl.Type.MASTER_GAIN);
             float Min = VolumeControl.getMinimum();
             float Max = VolumeControl.getMaximum();
-            float Gain = Min + (Max - Min) * Math.max(0, Math.min(1, Volume));
-            VolumeControl.setValue(Gain);
+            
+            float dB = (float) (Math.log(Math.max(0.0001f, Volume)) / Math.log(10.0) * 20.0);
+            dB = Math.max(Min, Math.min(Max, dB));
+            
+            VolumeControl.setValue(dB);
         } catch (Exception e) {
             //Algunos sistemas no soportan el control de volumen
         }
@@ -590,13 +737,13 @@ public class AudioManager {
     public void PlayButtonHover() {PlaySoundEffect("button_hover");}
     public void PlayPieceMove() {PlaySoundEffect("piece_move");}
     public void PlayPieceCapture() {PlaySoundEffect("piece_capture");}
-    public void PlayBattleClash() {PlaySoundEffect("battle_clash");}
-    public void PlayBombExplosion() {PlaySoundEffect("bomb_explosion");}
     public void PlayInvalidMove() {PlaySoundEffect("invalid_move");}
     public void PlayNotification() {PlaySoundEffect("notification");}
+    
     public void PlayGameStart() {PlaySoundEffect("game_start");}
     public void PlayTurnChange() {PlaySoundEffect("turn_change");}
-    
+    public void PlayBattleClash() {PlaySoundEffect("battle_clash");}
+    public void PlayBombExplosion() {PlaySoundEffect("bomb_explosion");}
     /*
         Reproducir la voz de los personajes segun el nombre
     */

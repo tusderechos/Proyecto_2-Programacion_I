@@ -10,7 +10,6 @@
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ComponentEvent;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import java.io.File;
@@ -23,6 +22,8 @@ public class MainMenu extends javax.swing.JFrame {
     private boolean IsGameInProgress;
     private final GameManager gameManager;
     
+    private final AudioManager audioManager;
+    
     /**
      * Creates new form MainMenu
      * @param Username
@@ -32,9 +33,37 @@ public class MainMenu extends javax.swing.JFrame {
         this.IsGameInProgress = false;
         this.gameManager = GameManager.GetInstance();
         
+        audioManager = AudioManager.getInstance();
+        audioManager.PlayMenuMusic();
+        
         LoadBackgroundImage(); //Cargar imagen de fondo antes de inicializar componentes
         initComponents();
         SetupCustomization();
+        
+        SetupAudioCleanup();
+    }
+    
+    /*
+        Configuracion del audio y gestion de ventana
+    */
+    private void SetupAudioCleanup() {
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                //Parar musica
+                if (audioManager != null) {
+                    audioManager.StopMusic();
+                }
+            }
+            
+            @Override
+            public void windowActivated(java.awt.event.WindowEvent windowEvent) {
+                //Reanudar musica si se reactiva la ventana
+                if (audioManager != null) {
+                    audioManager.PlayMenuMusic();
+                }
+            }
+        });
     }
     
     /*
@@ -223,6 +252,7 @@ public class MainMenu extends javax.swing.JFrame {
         Button.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent evt) {
+                audioManager.PlayButtonHover();
                 Button.setBackground(OriginalColor.brighter());
             }
             
@@ -239,6 +269,7 @@ public class MainMenu extends javax.swing.JFrame {
     private void SetupWindowClosing() {
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void WindowClosing(java.awt.event.WindowEvent WindowEvent) {
+                audioManager.PlayButtonClick();
                 ExitToMainMenu();
             }
         });
@@ -257,6 +288,8 @@ public class MainMenu extends javax.swing.JFrame {
                 Message += "Puntos: " + CurrentPlayer.GetPoints() + "\n";
             }
             Message += "Selecciona una opcion del menu.";
+            
+            audioManager.PlayNotification();
         });
         
         Timer.setRepeats(false);
@@ -362,6 +395,8 @@ public class MainMenu extends javax.swing.JFrame {
     */
     private void StrateGOButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_StrateGOButtonActionPerformed
         // TODO add your handling code here:
+        audioManager.PlayButtonClick();
+        
         String[] Options = {"PARTIDA NUEVA"};
         int Choice = JOptionPane.showOptionDialog(this, "STRATEGO - MARVEL HEROES\n\nSelecciona una opcion: ", "Stratego - Marvel Heroes", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, Options, Options[0]);
         
@@ -375,6 +410,7 @@ public class MainMenu extends javax.swing.JFrame {
     */
     private void ConfigButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ConfigButtonActionPerformed
         // TODO add your handling code here:
+        audioManager.PlayButtonClick();
         ShowConfiguration();
     }//GEN-LAST:event_ConfigButtonActionPerformed
 
@@ -383,6 +419,7 @@ public class MainMenu extends javax.swing.JFrame {
     */
     private void ProfileButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ProfileButtonActionPerformed
         // TODO add your handling code here:
+        audioManager.PlayButtonClick();
         ShowProfileSubmenu();
     }//GEN-LAST:event_ProfileButtonActionPerformed
 
@@ -391,6 +428,7 @@ public class MainMenu extends javax.swing.JFrame {
     */
     private void MarvelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_MarvelButtonActionPerformed
         // TODO add your handling code here:
+        audioManager.PlayButtonClick();
         ShowMarvelSubmenu();
     }//GEN-LAST:event_MarvelButtonActionPerformed
 
@@ -399,11 +437,20 @@ public class MainMenu extends javax.swing.JFrame {
     */
     private void LogoutButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_LogoutButtonActionPerformed
         // TODO add your handling code here:
+        audioManager.PlayButtonClick();
+        
         int Respuesta = JOptionPane.showConfirmDialog(this, "Estas seguro de que quieres cerrar sesion?", "Cerrar sesion", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
         
         if (Respuesta == JOptionPane.YES_OPTION) {
+            audioManager.PlayNotification();
+            
             //Limpiar datos del jugador actual
             CurrentUser = null;
+            
+            //Parar la musica antes de cambiar la ventana
+            if (audioManager != null) {
+                audioManager.StopMusic();
+            }
             
             //Volver al menu principal
             InitialMenu InitialMenu = new InitialMenu();
@@ -423,18 +470,23 @@ public class MainMenu extends javax.swing.JFrame {
         Mostrar submenu de Mi Perfil
     */
     private void ShowProfileSubmenu() {
+        audioManager.PlayNotification();
+        
         String[] Options = {"LOG DE MIS ULTIMOS JUEGOS", "CAMBIAR MI PASSWORD", "ELIMINAR MI CUENTA"}; //Arreglo de las opciones disponibles
         
         int Choice = JOptionPane.showOptionDialog(this, "MI PERFIL \n\nSelecciona una opcion:", "Mi Perfil", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, Options, Options[0]);
         
         switch(Choice) {
             case 0: //Opcion del Log de los ultimos juegos
+                audioManager.PlayButtonClick();
                 ShowGameLog();
                 break;
             case 1: //Opcion de cambiar contraseña
+                audioManager.PlayButtonClick();
                 ChangePassword();
                 break;
             case 2: //Opcion de eliminar cuenta
+                audioManager.PlayInvalidMove();
                 DeleteAccount();
                 break;
         }
@@ -444,15 +496,19 @@ public class MainMenu extends javax.swing.JFrame {
         Mostrar el submenu de Universo Marvel
     */
     private void ShowMarvelSubmenu() {
+        audioManager.PlayNotification();
+        
         String[] Options = {"RANKING", "BATALLAS"};
         
         int Choice = JOptionPane.showOptionDialog(this, "UNIVERSO MARVEL\n\nSelecciona una opcion:", "Universo Marvel", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, Options, Options[0]);
         
         switch(Choice) {
             case 0:
+                audioManager.PlayButtonClick();
                 ShowRanking();
                 break;
             case 1:
+                audioManager.PlayVictoryHero();
                 ShowBattles();
                 break;
         }
@@ -462,10 +518,12 @@ public class MainMenu extends javax.swing.JFrame {
         Iniciar nuevo Juego(que miedo que presion)
     */
     private void StartNewGame() {
+        audioManager.PlayNotification();
+        
         int Opcion = JOptionPane.showConfirmDialog(this, "Deseas iniciar una Nueva Partida?\n" + "Esto abrira la configuracion de partida.", "Partida Nueva", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
         
         if (Opcion == JOptionPane.YES_OPTION) {
-            //Tengo que abrir la ventana de juego
+            audioManager.PlayVictoryHero();
             
             JOptionPane.showMessageDialog(this, """
                                                 Proximamente: Configuracion de partida nueva
@@ -481,9 +539,12 @@ public class MainMenu extends javax.swing.JFrame {
         Mostrar el log de juegos usando el GameManager
     */
     private void ShowGameLog() {
+        audioManager.PlayNotification();
+        
         Player CurrentPlayer = gameManager.FindPlayerByUsername(CurrentUser);
         
         if (CurrentPlayer == null) {
+            audioManager.PlayInvalidMove();
             JOptionPane.showMessageDialog(this, "Error: No se pudo obtener la informacion del jugador.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
@@ -518,6 +579,7 @@ public class MainMenu extends javax.swing.JFrame {
     private void ChangePassword() {
         Player CurrentPlayer = gameManager.FindPlayerByUsername(CurrentUser);
         if (CurrentPlayer == null) {
+            audioManager.PlayInvalidMove();
             JOptionPane.showMessageDialog(this, "Error: no se pudo obtener la informacion del jugador", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
@@ -543,30 +605,35 @@ public class MainMenu extends javax.swing.JFrame {
             
             //Para confirmar que el usuario llene todos los campos para cambiar su contraseña
             if (Current.isEmpty() || NewPass.isEmpty() || Confirm.isEmpty()) {
+                audioManager.PlayInvalidMove();
                 JOptionPane.showMessageDialog(this, "Complete todos los campos", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             
             //Para verificar que la contraseña actual que ponga el usuario sea la correcta
             if (!Current.equals(CurrentPlayer.GetPassword())) {
+                audioManager.PlayInvalidMove();
                 JOptionPane.showMessageDialog(this, "La contraseña actual es la incorrecta", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             
             //Para verificar que las contraseñas nuevas sean la misma
             if (!NewPass.equals(Confirm)) {
+                audioManager.PlayInvalidMove();
                 JOptionPane.showMessageDialog(this, "Las contraseñas nuevas no coinciden", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             
             //Verificacion de que la contraseña sea exactamente de 5 caracteres
-            if (NewPass.length() < 5) {
-                JOptionPane.showMessageDialog(this, "La nueva contraseña debe tener al menos 5 caracteres", "Error", JOptionPane.ERROR_MESSAGE);
+            if (NewPass.length() != 5) {
+                audioManager.PlayInvalidMove();
+                JOptionPane.showMessageDialog(this, "La nueva contraseña debe tener exactamente 5 caracteres", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             
             //Cambiar la contraseña usando el GameManager
             CurrentPlayer.SetPassword(NewPass);
+            audioManager.PlayNotification();
             JOptionPane.showMessageDialog(this, "Contraseña cambiada exitosamente", "Exito", JOptionPane.INFORMATION_MESSAGE);
         }
     }
@@ -577,9 +644,12 @@ public class MainMenu extends javax.swing.JFrame {
     private void DeleteAccount() {
         Player CurrentPlayer = gameManager.FindPlayerByUsername(CurrentUser);
         if (CurrentPlayer == null) {
+            audioManager.PlayInvalidMove();
             JOptionPane.showMessageDialog(this, "Error: No se pudo obtener la informacion del jugador", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
+        
+        audioManager.PlayInvalidMove();
         
         int Option = JOptionPane.showConfirmDialog(this, """
                                                          ⚠️ ADVERTENCIA ⚠️
@@ -603,14 +673,17 @@ public class MainMenu extends javax.swing.JFrame {
                 boolean Success = gameManager.DeleteAccount(CurrentUser);
                 
                 if (Success) {
+                    audioManager.PlayNotification();
                     JOptionPane.showMessageDialog(this, "Cuenta eliminada exitosamente.\n" + "Lamentamos verte partir.", "Cuenta Eliminada", JOptionPane.INFORMATION_MESSAGE);
                     
                     //Volver al menu inicial
                     ExitToMainMenu();
                 } else {
+                    audioManager.PlayInvalidMove();
                     JOptionPane.showMessageDialog(this, "Error al eliminar la cuenta\n" + "Intentalo de nuevo mas tarde.", "Error", JOptionPane.ERROR_MESSAGE);
                 } 
             }else if (Confirmacion != null) {
+                audioManager.PlayInvalidMove();
                 JOptionPane.showMessageDialog(this, "El nombre de usuario no coincide.\n" + "Eliminacion cancelada.", "Error de Confirmacicn", JOptionPane.ERROR_MESSAGE);
             }
         }
@@ -620,9 +693,12 @@ public class MainMenu extends javax.swing.JFrame {
         Mostrar el ranking de los jugadores
     */
     private void ShowRanking() {
+        audioManager.PlayVictoryHero();
+        
         Player[] AllPlayers = gameManager.GetRanking();
         
         if (AllPlayers.length == 0) {
+            audioManager.PlayInvalidMove();
             JOptionPane.showMessageDialog(this, """
                                                 RANKING DE JUGADORES
                                                 
@@ -644,7 +720,9 @@ public class MainMenu extends javax.swing.JFrame {
         
         //Verificar si hay jugadores activos
         if (ActiveCount == 0) {
-            //JOptionPane.showMessageDialog(this, );
+            audioManager.PlayInvalidMove();
+            JOptionPane.showMessageDialog(this, "No hay jugadores activos en el sistema", "Ranking vacio", JOptionPane.INFORMATION_MESSAGE);
+            return;
         }
         
         //Ordenar por puntos
@@ -652,8 +730,8 @@ public class MainMenu extends javax.swing.JFrame {
             for (int j = 0; j < ActiveCount - 1 - i; j++) {
                 if (ActivePlayers[j].GetPoints() < ActivePlayers[j + 1].GetPoints()) {
                     Player temp = ActivePlayers[j];
-                    ActivePlayers[j] = ActivePlayers[j - 1];
-                    ActivePlayers[j - 1] = temp;
+                    ActivePlayers[j] = ActivePlayers[j + 1];
+                    ActivePlayers[j + 1] = temp;
                 }
             }
         }
@@ -700,9 +778,12 @@ public class MainMenu extends javax.swing.JFrame {
         Mostrar las epicas batallas de rap del frikismo
     */
     private void ShowBattles() {
+        audioManager.PlayVictoryHero();
+        
         //Mostrar las estadisticas del jugador actual
         Player CurrentPlayer = gameManager.FindPlayerByUsername(CurrentUser);
         if (CurrentPlayer == null) {
+            audioManager.PlayInvalidMove();
             JOptionPane.showMessageDialog(this, "Error: No se pudo obtener la informacion del jugador", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
@@ -711,7 +792,7 @@ public class MainMenu extends javax.swing.JFrame {
         int TotalGames = GameHistory.length;
         int Victories = 0;
         
-        //Cantar vistorias
+        //Contar vistorias
         for (int i = 0; i < GameHistory.length; i++) {
             String Game = GameHistory[i];
             if (Game.toLowerCase().contains("victoria") || Game.toLowerCase().contains("gano")) {
@@ -759,6 +840,8 @@ public class MainMenu extends javax.swing.JFrame {
         Mostrar configuracion
     */
     private void ShowConfiguration() {
+        audioManager.PlayButtonClick();
+        
         SwingUtilities.invokeLater(() -> {
             new Configuration().setVisible(true);
         });
@@ -767,10 +850,17 @@ public class MainMenu extends javax.swing.JFrame {
     /*
         Salir al menu principal osea cerrar sesion
     */
-    private void ExitToMainMenu() {
+    private void ExitToMainMenu() {        
         int Option = JOptionPane.showConfirmDialog(this, "Deseas cerrar sesion y volver al menu principal?", "Cerrar sesion", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
         
         if (Option == JOptionPane.YES_OPTION) {
+            audioManager.PlayNotification();
+            
+            //Parar la musica antes de cambiar ventana
+            if (audioManager != null) {
+                audioManager.StopMusic();
+            }
+            
             dispose(); //Para cerrar la ventana
             
             //Volver al menu principal
@@ -808,8 +898,14 @@ public class MainMenu extends javax.swing.JFrame {
         //Actualizar titulo de ventana
         if (InProgress) {
             setTitle("MARVEL HEROES - STRATEGO | " + CurrentUser + " - Jugando");
+            if (audioManager != null) {
+                audioManager.PlayGameStart();
+            }
         } else {
             setTitle("MARVEL HEROES - STRATEGO | Jugador: " + CurrentUser);
+            if (audioManager != null) {
+                audioManager.PlayMenuMusic();
+            }
         }
     }
     
