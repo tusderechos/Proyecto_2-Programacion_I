@@ -44,6 +44,10 @@ public class AudioManager {
     private String CurrentMusicName;
     private boolean IsMusicPlaying = false;
     
+    //Control de musica continua
+    private boolean KeepMusicPlaying = false;
+    private String RequestedMusicTrack = "";
+    
     //Le constructor
     private AudioManager() {
         //Inicializacion de los arreglos
@@ -177,7 +181,7 @@ public class AudioManager {
                 SoundEffectClips[SoundEffectCount] = Clip;
                 SoundEffectCount++;
             } else {
-                //Generar efectos sinteticos
+                //Generar efectos sinteticos como fallback
                 Clip SynthClip = GenerateSyntheticSFX(Name);
                 if (SynthClip != null) {
                     SoundEffectNames[SoundEffectCount] = Name;
@@ -221,10 +225,13 @@ public class AudioManager {
     */
     private Clip LoadAudioClip(String FilePath) {
         try {
+            //Primer metodo para cargar clips: desde resources
             InputStream AudioSrc = getClass().getResourceAsStream("/" + FilePath);
             if (AudioSrc == null) {
+                //Segundo metodo para cargar clips: Desde el archivo directo
                 File AudioFile = new File(FilePath);
                 if (!AudioFile.exists()) {
+                    //Tercer metodo para cargar clips: desde src/main/resources
                     AudioFile = new File("src/main/resources/" + FilePath);
                     if (!AudioFile.exists()) {
                         return null;
@@ -365,16 +372,23 @@ public class AudioManager {
         }
     }
     
+    
     /*
         -->     METODOS PUBLICOS     <--
     */
     
+    
     /*
-        Reproduce musica de fondo con un loop
+        Reproducir musica solamente si ya no se esta reproduciendo
     */
     public void PlayMusic(String TrackName) {
         if (!MusicEnabled || !SoundEnabled) {
             return;
+        }
+        
+        //Solo cambiar musica si es diferente a la actual
+        if (CurrentMusicName != null && CurrentMusicName.equals(TrackName) && IsMusicPlaying) {
+           return;
         }
         
         SwingUtilities.invokeLater(() -> {
@@ -391,13 +405,34 @@ public class AudioManager {
                     CurrentMusic = MusicClip;
                     CurrentMusicName = TrackName;
                     IsMusicPlaying = true;
-                    
-                    System.out.println("Reproduciendo musica: " + TrackName);
                 }
             } catch (Exception e) {
                 System.err.println("Error reproduciendo musica: " + e.getMessage());
             }
         });
+    }
+    
+    /*
+        Asegurar que cuerta musica siga reproduciendose
+    */
+    public void EnsureMusicPlaying(String TrackName) {
+        if (!MusicEnabled || !SoundEnabled) {
+            return;
+        }
+        
+        //Solo reproducir si no hay musica o es diferente
+        if (CurrentMusicName == null || !CurrentMusicName.equals(TrackName) || !IsMusicPlaying) {
+            PlayMusic(TrackName);
+        }
+    }
+    
+    /*
+        Forzar cambio de musica (para transiciones importantes)
+    */
+    public void ForceChangeMusic(String TrackName) {
+        //Resetear estado actual para forzar el cambio
+        CurrentMusicName = null;
+        PlayMusic(TrackName);
     }
     
     /*
@@ -435,6 +470,7 @@ public class AudioManager {
             CurrentMusic.setFramePosition(0);
             IsMusicPlaying = false;
             System.out.println("musica detenida");
+            CurrentMusicName = null;
         }
     }
     
@@ -661,14 +697,17 @@ public class AudioManager {
     */
     private void SetVolume(Clip Clip, float Volume) {
         try {
-            FloatControl VolumeControl = (FloatControl) Clip.getControl(FloatControl.Type.MASTER_GAIN);
-            float Min = VolumeControl.getMinimum();
-            float Max = VolumeControl.getMaximum();
-            
-            float dB = (float) (Math.log(Math.max(0.0001f, Volume)) / Math.log(10.0) * 20.0);
-            dB = Math.max(Min, Math.min(Max, dB));
-            
-            VolumeControl.setValue(dB);
+            if (Clip != null && Clip.isOpen()) {
+                FloatControl VolumeControl = (FloatControl) Clip.getControl(FloatControl.Type.MASTER_GAIN);
+                float Min = VolumeControl.getMinimum();
+                float Max = VolumeControl.getMaximum();
+
+                //Convertir volumen lineal a decibelios
+                float dB = (float) (Math.log(Math.max(0.0001f, Volume)) / Math.log(10.0) * 20.0);
+                dB = Math.max(Min, Math.min(Max, dB));
+
+                VolumeControl.setValue(dB);
+            }
         } catch (Exception e) {
             //Algunos sistemas no soportan el control de volumen
         }
@@ -726,12 +765,12 @@ public class AudioManager {
     /*
         -->     METODOS DE CONVENIENCIA      <--
     */
-    public void PlayMenuMusic() {PlayMusic("menu_music");}
-    public void PlayHeroMusic() {PlayMusic("hero_theme");}
-    public void PlayVillainMusic() {PlayMusic("villain_theme");}
-    public void PlayBattleMusic() {PlayMusic("battle_music");}
-    public void PlayVictoryHero() {PlayMusic("victory_hero");}
-    public void PlayVictoryVillain() {PlayMusic("victory_villain");}
+    public void PlayMenuMusic() {EnsureMusicPlaying("menu_music");}
+    public void PlayHeroMusic() {ForceChangeMusic("hero_theme");}
+    public void PlayVillainMusic() {ForceChangeMusic("villain_theme");}
+    public void PlayBattleMusic() {ForceChangeMusic("battle_music");}
+    public void PlayVictoryHero() {ForceChangeMusic("victory_hero");}
+    public void PlayVictoryVillain() {ForceChangeMusic("victory_villain");}
     
     public void PlayButtonClick() {PlaySoundEffect("button_click");}
     public void PlayButtonHover() {PlaySoundEffect("button_hover");}
@@ -744,6 +783,8 @@ public class AudioManager {
     public void PlayTurnChange() {PlaySoundEffect("turn_change");}
     public void PlayBattleClash() {PlaySoundEffect("battle_clash");}
     public void PlayBombExplosion() {PlaySoundEffect("bomb_explosion");}
+    
+    
     /*
         Reproducir la voz de los personajes segun el nombre
     */

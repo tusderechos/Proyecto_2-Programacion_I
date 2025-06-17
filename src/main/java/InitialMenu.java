@@ -13,7 +13,6 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import java.io.File;
-import java.io.IOException;
 import javax.swing.JFrame;
 
 //Panel personalizado con imagen de fondo

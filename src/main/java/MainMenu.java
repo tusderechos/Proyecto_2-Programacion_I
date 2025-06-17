@@ -811,8 +811,8 @@ public class MainMenu extends javax.swing.JFrame {
         BattleText.append("• Derrotas: ").append(Defeats).append("\n");
         BattleText.append("• Porcentaje de vistoria: ").append(String.format("%.1f", WinRate)).append("\n");
         BattleText.append("• Puntos Totales: ").append(CurrentPlayer.GetPoints()).append("\n\n");
-        BattleText.append("• Partidas con Heroes: ").append(CurrentPlayer.GetGamesWithHeroes());
-        BattleText.append("• Partidas con Villanos: ").append(CurrentPlayer.GetGamesWithVillains());
+        BattleText.append("• Partidas con Heroes: ").append(CurrentPlayer.GetGamesWithHeroes()).append("\n");
+        BattleText.append("• Partidas con Villanos: ").append(CurrentPlayer.GetGamesWithVillains()).append("\n");
         
         if (GameHistory.length == 0) {
             BattleText.append("Aun no has hecho ninguna batalla!\n");
