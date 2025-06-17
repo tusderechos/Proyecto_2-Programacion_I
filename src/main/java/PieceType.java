@@ -189,7 +189,7 @@ enum PieceType {
     public static PieceType[] GetPieceForSide(boolean IsHero) {
         //Contar primero cuantas piezas hay para el bando
         int Count = 0;
-        for (PieceType Type : Values()) {
+        for (PieceType Type : values()) { //values es un metodo automatico generado por Java pa los enums, que en este caso hace un return con todos los PieceType del enum
             if (Type.IsHero() == IsHero) {
                 Count++;
             }
@@ -198,7 +198,7 @@ enum PieceType {
         //Crear un arreglo del tamaño correcto
         PieceType[] Pieces = new PieceType[Count];
         int Index = 0;
-        for (PieceType Type : Values()) {
+        for (PieceType Type : values()) { //Iterar nuevamente por todos los PieceType
             if (Type.IsHero() == IsHero) {
                 Pieces[Index++] = Type;
             }
@@ -262,6 +262,10 @@ class Position {
     
     public int getRow() {return Row;}
     public int getCol() {return Col;}
+    
+    public boolean isValid() {
+        return Row >= 0 && Row <= 10 && Col >= 0 && Col <= 10;
+    }
     
     public boolean isLake() {
         //Zonas prohibidas en el centro del tablero
@@ -459,7 +463,7 @@ class Movement {
     /*
         Valida movimientos multiples (solamente para el rango 2)
     */
-    private static MoveResult ValidateMultiplesMove(Position From, Position To, Piece[][] Board) {
+    private static MoveResult ValidateMultipleMove(Position From, Position To, Piece[][] Board) {
         int RowDiff = To.getRow() - From.getRow();
         int ColDiff = To.getCol() - From.getCol();
         
@@ -532,7 +536,7 @@ class Movement {
         //Caso especial: Rango 1 atacando al rango 10
         if (Attacker.getRank() == 1 && Defender.getRank() == 10) {
             Description += "El rango 1 ha eleminado al rango 10!!";
-            return new BattleRsult(Attacker, Defender, Attacker, false, Description);
+            return new BattleResult(Attacker, Defender, Attacker, false, Description);
         }
         
         //Batalla normal basada en rangos
@@ -552,5 +556,214 @@ class Movement {
     /*
         Obtiene todas las posiciones adyacentes validas para una pieza
     */
+    public static Position[] getValidMoves(Piece piece, Piece[][] Board, boolean IsHeroTurn) {
+        if (piece == null || !piece.canMove() || piece.IsHero() != IsHeroTurn) {
+            return new Position[0];
+        }
+        
+        Position CurrentPos = piece.getPosition();
+        
+        if (piece.getRank() == 2) {
+            //Rango 2 peude moverse en las 4 direcciones ortogonales multiples casillas
+            return GetMultipleMoves(CurrentPos, Board, piece.IsHero());
+        } else {
+            //Piezas normales solo se mueven una casilla
+            Position[] TempMoves = new Position[4]; //Maximo 4 direcciones
+            int Count = 0;
+            
+            int[][] Direcciones = {{-1, 0}, {1,0}, {0,-1}, {0,1}}; //Arriba. abajo, izquierda, derecha
+            
+            for (int[] Dir : Direcciones) {
+                Position NewPos = new Position(CurrentPos.getRow() + Dir[0], CurrentPos.getCol() + Dir[1]);
+                
+                MoveResult Result = ValidateMove(piece, CurrentPos, NewPos, Board, IsHeroTurn);
+                if (Result == MoveResult.VALID_MOVE || Result == MoveResult.BATTLE_REQUIRED) {
+                    TempMoves[Count++] = NewPos;
+                }
+            }
+            
+            //Crear arreglo del tamaño exacto
+            Position[] ValidMoves = new Position[Count];
+            for (int i = 0; i < Count; i++) {
+                ValidMoves[i] = TempMoves[i];
+            }
+            return ValidMoves;
+        }
+    }
     
+    /*
+        Obtiene movimientos validos para rango 2 (movimiento multiple)
+    */
+    private static Position[] GetMultipleMoves(Position From, Piece[][] Board, boolean IsHero) {
+        Position[] TempMoves = new Position[28]; //Maximo teorico en tablero 10x10
+        int Count = 0;
+        
+        int[][] Direcciones = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+        
+        for (int[] Dir : Direcciones) {
+            int CurrentRow = From.getRow();
+            int CurrentCol = From.getCol();
+            
+            while (true) {
+                CurrentRow += Dir[0];
+                CurrentCol += Dir[1];
+                Position NewPos = new Position(CurrentRow, CurrentCol);
+                
+                //Verficar limites del tablero
+                if (!NewPos.isValid()) {
+                    break;
+                }
+                
+                //Verificar zonas prohibidas
+                Piece PieceAtPos = Board[CurrentRow][CurrentCol];
+                if (PieceAtPos != null) {
+                    //Si es pieza enemiga, puede atacar pero no pasar
+                    if (PieceAtPos.IsHero() != IsHero) {
+                        TempMoves[Count++] = NewPos;
+                    }
+                    break;
+                }
+                
+                //Casilla vacia - Puede moverse
+                TempMoves[Count++] = NewPos;
+            }
+        }
+        
+        //Crear arreglo del tamaño exacto
+        Position[] ValidMoves = new Position[Count];
+        for (int i = 0; i < Count; i++) {
+            ValidMoves[i] = TempMoves[i];
+        }
+        return ValidMoves;
+    }
+    
+    /*
+        Verifica si un jugador tiene movimientos valid disponibles
+    */
+    public static boolean HasValidMoves(Piece[][] Board, boolean IsHeroTurn) {
+        for (int row = 0; row < 10; row++) {
+            for (int col = 0; col < 10; col++) {
+                Piece piece = Board[row][col];
+                if (piece != null && piece.IsHero() == IsHeroTurn && piece.canMove()) {
+                    Position[] Moves = getValidMoves(piece, Board, IsHeroTurn);
+                    if (Moves.length > 0) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    
+    /*
+        Cuenta las piezas moviles de un bando
+    */
+    public static int CountMovablePieces(Piece[][] Board, boolean IsHero) {
+        int Count = 0;
+        for (int row = 0; row < 10; row++) {
+            for (int col = 0; col < 10; col++) {
+                Piece piece = Board[row][col];
+                if (piece != null && piece.IsHero() == IsHero && piece.canMove()) {
+                    Count++;
+                }
+            }
+        }
+        return Count;
+    }
+    
+    /*
+        Busca la bandera de un bando especifico
+    */
+    public static Position FindLand(Piece[][] Board, boolean IsHero) {
+        for (int row = 0; row < 10; row++) {
+            for (int col = 0; col < 10; col++) {
+                Piece piece = Board[row][col];
+                if (piece != null && piece.IsHero() == IsHero && piece.isLand()) {
+                    return new Position(row, col);
+                }
+            }
+        }
+        return null;
+    }
+    
+    /*
+        Verificar las condiciones de victoria
+    */
+    public static GameState CheckGameState(Piece[][] Board) {
+        //Verificar si alguna bandera fue capturada
+        Position HeroLand = FindLand(Board, true);
+        Position VillainLand = FindLand(Board, false);
+        
+        if (HeroLand == null) {
+            return GameState.VILLAINS_WIN_LAND_CAPTURED;
+        }
+        
+        if (VillainLand == null) {
+            return GameState.HEROES_WIN_LAND_CAPTURED;
+        }
+        
+        //Verificar si algun bando no tiene piezas moviles
+        int HeroMovablePieces = CountMovablePieces(Board, true);
+        int VillainMovablePieces = CountMovablePieces(Board, false);
+        
+        if (HeroMovablePieces == 0) {
+            return GameState.VILLAINS_WIN_NO_MOVES;
+        }
+        
+        if (VillainMovablePieces == 0) {
+            return GameState.HEROES_WIN_NO_MOVES;
+        }
+        
+        return GameState.IN_PROGRESS;
+    }
+    
+    /*
+        Obtiene todas las piezas capturadas de un bando
+    */
+    public static Piece[] GetCapturedPieces(Piece[] AllPieces, boolean IsHero) {
+        //Contar primero las piezas capturadas
+        int Count = 0;
+        for (Piece piece : AllPieces) {
+            if (piece.IsHero() == IsHero && piece.getPosition() == null) {
+                Count++;
+            }
+        }
+        
+        //Crear arreglo del tamaño correcto
+        Piece[] CapturedPieces = new Piece[Count];
+        int Index = 0;
+        for (Piece piece : AllPieces) {
+            if (piece.IsHero() && piece.getPosition() == null) {
+                CapturedPieces[Index++] = piece;
+            }
+        }
+        return CapturedPieces;
+    }
+    
+    /*
+        Enum para el estado del juego
+    */
+    enum GameState {
+        IN_PROGRESS("Juego en Progreso"),
+        HEROES_WIN_LAND_CAPTURED("Los Heroes ganan! La Tierra ha sido capturada!"),
+        VILLAINS_WIN_LAND_CAPTURED("Los Villanos ganan! La Tierra ha sido capturada!"),
+        HEROES_WIN_NO_MOVES("Los Heroes ganan! Los Villanos se han quedado sin movimientos"),
+        VILLAINS_WIN_NO_MOVES("Los Villanos ganan! Los Heroes se han quedado sin movimientos"),
+        HEROES_WIN_SURRENDER("Los Heroes ganan! Los Villanos se han rendido!"),
+        VILLAINS_WIN_SURRENDER("Los Villanos ganan! Los Heroes se han rendido!");
+        
+        private final String Description;
+        
+        GameState(String Description) {
+            this.Description = Description;
+        }
+        
+        public String getDescription() {
+            return Description;
+        }
+        
+        public boolean isGameOver() {
+            return this != IN_PROGRESS;
+        }
+    }
 }
